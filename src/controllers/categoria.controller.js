@@ -1,21 +1,24 @@
 import categoriaService from '../services/categoria.service.js';
+import * as response from '../utils/response.js';
 
 class CategoriaController {
   async createCategoria(req, res) {
     try {
       const categoria = await categoriaService.createCategoria(req.body);
-      res.status(201).json({ message: 'Categoría creada exitosamente', categoria });
+      res.status(201).json(response.created(categoria, 'Categoría creada exitosamente'));
     } catch (error) {
-      res.status(400).json({ message: error.message });
+      const err = response.handleError(error);
+      res.status(err.statusCode || 400).json(err);
     }
   }
 
   async getAllCategorias(req, res) {
     try {
       const categorias = await categoriaService.getAllCategorias();
-      res.status(200).json(categorias);
+      res.status(200).json(response.success(categorias));
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      const err = response.handleError(error);
+      res.status(err.statusCode || 500).json(err);
     }
   }
 
@@ -24,11 +27,12 @@ class CategoriaController {
       const { id } = req.params;
       const categoria = await categoriaService.getCategoriaById(id);
       if (!categoria) {
-        return res.status(404).json({ message: 'Categoría no encontrada' });
+        return res.status(404).json(response.notFound('Categoría no encontrada'));
       }
-      res.status(200).json(categoria);
+      res.status(200).json(response.success(categoria));
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      const err = response.handleError(error);
+      res.status(err.statusCode || 500).json(err);
     }
   }
 
@@ -36,12 +40,10 @@ class CategoriaController {
     try {
       const { id } = req.params;
       const categoria = await categoriaService.updateCategoria(id, req.body);
-      if (!categoria) {
-        return res.status(404).json({ message: 'Categoría no encontrada' });
-      }
-      res.status(200).json({ message: 'Categoría actualizada', categoria });
+      res.status(200).json(response.success(categoria, 'Categoría actualizada'));
     } catch (error) {
-      res.status(400).json({ message: error.message });
+      const err = response.handleError(error);
+      res.status(err.statusCode || 400).json(err);
     }
   }
 
@@ -49,12 +51,10 @@ class CategoriaController {
     try {
       const { id } = req.params;
       const categoria = await categoriaService.deleteCategoria(id);
-      if (!categoria) {
-        return res.status(404).json({ message: 'Categoría no encontrada' });
-      }
-      res.status(200).json({ message: 'Categoría desactivada exitosamente' });
+      res.status(200).json(response.noContent('Categoría desactivada exitosamente'));
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      const err = response.handleError(error);
+      res.status(err.statusCode || 500).json(err);
     }
   }
 }

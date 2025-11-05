@@ -30,7 +30,7 @@ const OrdenItem = sequelize.define('OrdenItem', {
         allowNull: false,
     },
 }, {
-    tableName: 'Ordenes_Items',
+    tableName: 'ordenes_items',
     timestamps: false,
 });
 

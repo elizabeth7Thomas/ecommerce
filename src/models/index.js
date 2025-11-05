@@ -12,58 +12,151 @@ import Orden from './ordenes.model.js';
 import OrdenItem from './ordenesItems.model.js';
 import Payment from './payments.model.js';
 
-// Associations
-// Rol -> Usuario (1:N)
-Rol.hasMany(Usuario, { foreignKey: 'id_rol', sourceKey: 'id_rol' });
-Usuario.belongsTo(Rol, { foreignKey: 'id_rol', targetKey: 'id_rol' });
+// Associations con opciones mejoradas
+const setupAssociations = () => {
+  // Rol -> Usuario (1:N)
+  Rol.hasMany(Usuario, { 
+    foreignKey: 'id_rol',
+    as: 'usuarios',
+    onDelete: 'RESTRICT' // No eliminar rol si tiene usuarios
+  });
+  Usuario.belongsTo(Rol, { 
+    foreignKey: 'id_rol',
+    as: 'rol'
+  });
 
-// Usuario <-> Cliente (1:1)
-Usuario.hasOne(Cliente, { foreignKey: 'id_usuario', sourceKey: 'id_usuario' });
-Cliente.belongsTo(Usuario, { foreignKey: 'id_usuario', targetKey: 'id_usuario' });
+  // Usuario <-> Cliente (1:1)
+  Usuario.hasOne(Cliente, { 
+    foreignKey: 'id_usuario',
+    as: 'cliente',
+    onDelete: 'CASCADE'
+  });
+  Cliente.belongsTo(Usuario, { 
+    foreignKey: 'id_usuario',
+    as: 'usuario'
+  });
 
-// Cliente -> Direcciones (1:N)
-Cliente.hasMany(Direccion, { foreignKey: 'id_cliente', sourceKey: 'id_cliente' });
-Direccion.belongsTo(Cliente, { foreignKey: 'id_cliente', targetKey: 'id_cliente' });
+  // Cliente -> Direcciones (1:N)
+  Cliente.hasMany(Direccion, { 
+    foreignKey: 'id_cliente',
+    as: 'direcciones',
+    onDelete: 'CASCADE'
+  });
+  Direccion.belongsTo(Cliente, { 
+    foreignKey: 'id_cliente',
+    as: 'cliente'
+  });
 
-// CategoriaProducto -> Producto (1:N)
-CategoriaProducto.hasMany(Producto, { foreignKey: 'id_categoria', sourceKey: 'id_categoria' });
-Producto.belongsTo(CategoriaProducto, { foreignKey: 'id_categoria', targetKey: 'id_categoria' });
+  // CategoriaProducto -> Producto (1:N)
+  CategoriaProducto.hasMany(Producto, { 
+    foreignKey: 'id_categoria',
+    as: 'productos',
+    onDelete: 'RESTRICT'
+  });
+  Producto.belongsTo(CategoriaProducto, { 
+    foreignKey: 'id_categoria',
+    as: 'categoria'
+  });
 
-// Producto -> Imagenes (1:N)
-Producto.hasMany(ProductoImagen, { foreignKey: 'id_producto', sourceKey: 'id_producto' });
-ProductoImagen.belongsTo(Producto, { foreignKey: 'id_producto', targetKey: 'id_producto' });
+  // Producto -> Imagenes (1:N)
+  Producto.hasMany(ProductoImagen, { 
+    foreignKey: 'id_producto',
+    as: 'imagenes',
+    onDelete: 'CASCADE'
+  });
+  ProductoImagen.belongsTo(Producto, { 
+    foreignKey: 'id_producto',
+    as: 'producto'
+  });
 
-// Cliente -> CarritoCompras (1:N)
-Cliente.hasMany(CarritoCompras, { foreignKey: 'id_cliente', sourceKey: 'id_cliente' });
-CarritoCompras.belongsTo(Cliente, { foreignKey: 'id_cliente', targetKey: 'id_cliente' });
+  // Cliente -> CarritoCompras (1:N) - Un cliente puede tener múltiples carritos (histórico)
+  Cliente.hasMany(CarritoCompras, { 
+    foreignKey: 'id_cliente',
+    as: 'carritos',
+    onDelete: 'CASCADE'
+  });
+  CarritoCompras.belongsTo(Cliente, { 
+    foreignKey: 'id_cliente',
+    as: 'cliente'
+  });
 
-// CarritoCompras -> CarritoProductos (1:N)
-CarritoCompras.hasMany(CarritoProducto, { foreignKey: 'id_carrito', sourceKey: 'id_carrito' });
-CarritoProducto.belongsTo(CarritoCompras, { foreignKey: 'id_carrito', targetKey: 'id_carrito' });
+  // CarritoCompras -> CarritoProductos (1:N)
+  CarritoCompras.hasMany(CarritoProducto, { 
+    foreignKey: 'id_carrito',
+    as: 'productosCarrito',
+    onDelete: 'CASCADE'
+  });
+  CarritoProducto.belongsTo(CarritoCompras, { 
+    foreignKey: 'id_carrito',
+    as: 'carrito'
+  });
 
-// CarritoProducto -> Producto
-Producto.hasMany(CarritoProducto, { foreignKey: 'id_producto', sourceKey: 'id_producto' });
-CarritoProducto.belongsTo(Producto, { foreignKey: 'id_producto', targetKey: 'id_producto' });
+  // Producto -> CarritoProducto
+  Producto.hasMany(CarritoProducto, { 
+    foreignKey: 'id_producto',
+    as: 'enCarritos'
+  });
+  CarritoProducto.belongsTo(Producto, { 
+    foreignKey: 'id_producto',
+    as: 'producto'
+  });
 
-// Cliente -> Orden (1:N)
-Cliente.hasMany(Orden, { foreignKey: 'id_cliente', sourceKey: 'id_cliente' });
-Orden.belongsTo(Cliente, { foreignKey: 'id_cliente', targetKey: 'id_cliente' });
+  // Cliente -> Orden (1:N)
+  Cliente.hasMany(Orden, { 
+    foreignKey: 'id_cliente',
+    as: 'ordenes',
+    onDelete: 'RESTRICT' // No eliminar si tiene órdenes
+  });
+  Orden.belongsTo(Cliente, { 
+    foreignKey: 'id_cliente',
+    as: 'cliente'
+  });
 
-// Orden -> Direccion (direccion de envio)
-Direccion.hasMany(Orden, { foreignKey: 'id_direccion_envio', sourceKey: 'id_direccion' });
-Orden.belongsTo(Direccion, { foreignKey: 'id_direccion_envio', targetKey: 'id_direccion' });
+  // Direccion -> Orden (direccion de envio)
+  Direccion.hasMany(Orden, { 
+    foreignKey: 'id_direccion_envio',
+    as: 'ordenesEnvio'
+  });
+  Orden.belongsTo(Direccion, { 
+    foreignKey: 'id_direccion_envio',
+    as: 'direccionEnvio'
+  });
 
-// Orden -> OrdenItems (1:N)
-Orden.hasMany(OrdenItem, { foreignKey: 'id_orden', sourceKey: 'id_orden' });
-OrdenItem.belongsTo(Orden, { foreignKey: 'id_orden', targetKey: 'id_orden' });
+  // Orden -> OrdenItems (1:N)
+  Orden.hasMany(OrdenItem, { 
+    foreignKey: 'id_orden',
+    as: 'items',
+    onDelete: 'CASCADE'
+  });
+  OrdenItem.belongsTo(Orden, { 
+    foreignKey: 'id_orden',
+    as: 'orden'
+  });
 
-// OrdenItem -> Producto
-Producto.hasMany(OrdenItem, { foreignKey: 'id_producto', sourceKey: 'id_producto' });
-OrdenItem.belongsTo(Producto, { foreignKey: 'id_producto', targetKey: 'id_producto' });
+  // Producto -> OrdenItem
+  Producto.hasMany(OrdenItem, { 
+    foreignKey: 'id_producto',
+    as: 'enOrdenes'
+  });
+  OrdenItem.belongsTo(Producto, { 
+    foreignKey: 'id_producto',
+    as: 'producto'
+  });
 
-// Orden -> Payments (1:N)
-Orden.hasMany(Payment, { foreignKey: 'id_orden', sourceKey: 'id_orden' });
-Payment.belongsTo(Orden, { foreignKey: 'id_orden', targetKey: 'id_orden' });
+  // Orden -> Payments (1:N)
+  Orden.hasMany(Payment, { 
+    foreignKey: 'id_orden',
+    as: 'pagos',
+    onDelete: 'RESTRICT'
+  });
+  Payment.belongsTo(Orden, { 
+    foreignKey: 'id_orden',
+    as: 'orden'
+  });
+};
+
+// Ejecutar las asociaciones
+setupAssociations();
 
 export {
     sequelize,
@@ -79,8 +172,21 @@ export {
     Orden,
     OrdenItem,
     Payment,
+    setupAssociations
 };
 
 export default {
     sequelize,
+    Rol,
+    Usuario,
+    Cliente,
+    Direccion,
+    CategoriaProducto,
+    Producto,
+    ProductoImagen,
+    CarritoCompras,
+    CarritoProducto,
+    Orden,
+    OrdenItem,
+    Payment,
 };

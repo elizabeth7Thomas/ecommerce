@@ -1,6 +1,7 @@
 import userService from '../services/user.service.js';
 import rolService from '../services/rol.service.js';
 import jwt from 'jsonwebtoken';
+import * as response from '../utils/response.js';
 
 const authController = {
     // Registro de nuevo usuario
@@ -38,22 +39,20 @@ const authController = {
                 { expiresIn: '24h' }
             );
 
-            res.status(201).json({
-                message: 'Usuario registrado exitosamente',
-                user: {
-                    id_usuario: newUser.id_usuario,
-                    nombre_usuario: newUser.nombre_usuario,
-                    correo_electronico: newUser.correo_electronico,
-                    id_rol: newUser.id_rol,
-                    nombre_rol: rol?.nombre_rol || 'cliente'
-                },
+            const responseData = {
+                id_usuario: newUser.id_usuario,
+                nombre_usuario: newUser.nombre_usuario,
+                correo_electronico: newUser.correo_electronico,
+                id_rol: newUser.id_rol,
+                nombre_rol: rol?.nombre_rol || 'cliente',
                 token
-            });
+            };
+
+            res.status(201).json(response.created(responseData, 'Usuario registrado exitosamente'));
         } catch (error) {
             console.error('Error en register:', error);
-            res.status(400).json({ 
-                error: error.message || 'Error al registrar usuario'
-            });
+            const err = response.handleError(error);
+            res.status(err.statusCode).json(err);
         }
     },
 
@@ -63,25 +62,19 @@ const authController = {
             const { correo_electronico, contrasena } = req.body;
 
             if (!correo_electronico || !contrasena) {
-                return res.status(400).json({ 
-                    error: 'Correo electrónico y contraseña son requeridos' 
-                });
+                return res.status(400).json(response.badRequest('Correo electrónico y contraseña son requeridos'));
             }
 
             // Buscar usuario por email
             const user = await userService.getUserByEmail(correo_electronico);
             if (!user) {
-                return res.status(401).json({ 
-                    error: 'Credenciales inválidas' 
-                });
+                return res.status(401).json(response.unauthorized('Credenciales inválidas'));
             }
 
             // Verificar contraseña
             const isValidPassword = await user.comparePassword(contrasena);
             if (!isValidPassword) {
-                return res.status(401).json({ 
-                    error: 'Credenciales inválidas' 
-                });
+                return res.status(401).json(response.unauthorized('Credenciales inválidas'));
             }
 
             // Obtener el rol completo
@@ -98,23 +91,21 @@ const authController = {
                 { expiresIn: '24h' }
             );
 
-            res.json({
-                message: 'Login exitoso',
-                user: {
-                    id_usuario: user.id_usuario,
-                    nombre_usuario: user.nombre_usuario,
-                    correo_electronico: user.correo_electronico,
-                    id_rol: user.id_rol,
-                    nombre_rol: rol?.nombre_rol || 'cliente',
-                    permisos: rol?.permisos || {}
-                },
+            const responseData = {
+                id_usuario: user.id_usuario,
+                nombre_usuario: user.nombre_usuario,
+                correo_electronico: user.correo_electronico,
+                id_rol: user.id_rol,
+                nombre_rol: rol?.nombre_rol || 'cliente',
+                permisos: rol?.permisos || {},
                 token
-            });
+            };
+
+            res.json(response.success(responseData, 'Login exitoso'));
         } catch (error) {
             console.error('Error en login:', error);
-            res.status(500).json({ 
-                error: 'Error al iniciar sesión'
-            });
+            const err = response.handleError(error);
+            res.status(err.statusCode || 500).json(err);
         }
     },
 
@@ -125,23 +116,25 @@ const authController = {
             const user = await userService.getUserById(id_usuario);
 
             if (!user) {
-                return res.status(404).json({ 
-                    error: 'Usuario no encontrado' 
-                });
+                return res.status(404).json(response.notFound('Usuario no encontrado'));
             }
 
-            res.json({
+            // Si no viene el rol incluido, obtenerlo
+            const rol = user.rol ? user.rol : await rolService.getRolById(user.id_rol);
+
+            const profileData = {
                 id_usuario: user.id_usuario,
                 nombre_usuario: user.nombre_usuario,
                 correo_electronico: user.correo_electronico,
-                rol: user.rol,
+                rol: rol,
                 fecha_creacion: user.fecha_creacion
-            });
+            };
+
+            res.json(response.success(profileData));
         } catch (error) {
             console.error('Error en getProfile:', error);
-            res.status(500).json({ 
-                error: 'Error al obtener perfil'
-            });
+            const err = response.handleError(error);
+            res.status(err.statusCode || 500).json(err);
         }
     },
 
@@ -157,19 +150,17 @@ const authController = {
 
             const updatedUser = await userService.updateUser(id_usuario, updates);
 
-            res.json({
-                message: 'Perfil actualizado exitosamente',
-                user: {
-                    id_usuario: updatedUser.id_usuario,
-                    nombre_usuario: updatedUser.nombre_usuario,
-                    correo_electronico: updatedUser.correo_electronico
-                }
-            });
+            const responseData = {
+                id_usuario: updatedUser.id_usuario,
+                nombre_usuario: updatedUser.nombre_usuario,
+                correo_electronico: updatedUser.correo_electronico
+            };
+
+            res.json(response.success(responseData, 'Perfil actualizado exitosamente'));
         } catch (error) {
             console.error('Error en updateProfile:', error);
-            res.status(400).json({ 
-                error: error.message || 'Error al actualizar perfil'
-            });
+            const err = response.handleError(error);
+            res.status(err.statusCode || 400).json(err);
         }
     },
 
@@ -180,32 +171,29 @@ const authController = {
             const { contrasena_actual, contrasena_nueva } = req.body;
 
             if (!contrasena_actual || !contrasena_nueva) {
-                return res.status(400).json({ 
-                    error: 'Contraseña actual y nueva contraseña son requeridas' 
-                });
+                return res.status(400).json(response.badRequest('Contraseña actual y nueva contraseña son requeridas'));
             }
 
             // Verificar contraseña actual
             const user = await userService.getUserById(id_usuario);
+            if (!user) {
+                return res.status(404).json(response.notFound('Usuario no encontrado'));
+            }
+
             const isValidPassword = await user.comparePassword(contrasena_actual);
 
             if (!isValidPassword) {
-                return res.status(401).json({ 
-                    error: 'Contraseña actual incorrecta' 
-                });
+                return res.status(401).json(response.unauthorized('Contraseña actual incorrecta'));
             }
 
             // Actualizar contraseña
             await userService.updateUser(id_usuario, { contrasena: contrasena_nueva });
 
-            res.json({
-                message: 'Contraseña actualizada exitosamente'
-            });
+            res.json(response.noContent('Contraseña actualizada exitosamente'));
         } catch (error) {
             console.error('Error en changePassword:', error);
-            res.status(500).json({ 
-                error: 'Error al cambiar contraseña'
-            });
+            const err = response.handleError(error);
+            res.status(err.statusCode || 500).json(err);
         }
     }
 };

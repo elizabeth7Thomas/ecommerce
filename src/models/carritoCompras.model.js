@@ -16,7 +16,7 @@ const CarritoCompras = sequelize.define('CarritoCompras', {
         defaultValue: 'activo',
     },
 }, {
-    tableName: 'Carrito_Compras',
+    tableName: 'carrito_compras',
     timestamps: true,
     createdAt: 'fecha_creacion',
     updatedAt: 'fecha_actualizacion',

@@ -36,7 +36,7 @@ const Payment = sequelize.define('Payment', {
         type: DataTypes.TEXT,
     },
 }, {
-    tableName: 'Payments',
+    tableName: 'payments',
     timestamps: false,
 });
 

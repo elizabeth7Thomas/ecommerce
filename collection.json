@@ -1,1465 +1,731 @@
 {
-	"info": {
-		"_postman_id": "ecommerce-api-collection-2025",
-		"name": "Ecommerce API - Colección Completa",
-		"description": "Colección completa de Postman para probar todos los endpoints de la API de Ecommerce",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"auth": {
-		"type": "bearer",
-		"bearer": [
-			{
-				"key": "token",
-				"value": "{{token}}",
-				"type": "string"
-			}
-		]
-	},
-	"variable": [
-		{
-			"key": "baseUrl",
-			"value": "http://localhost:3000/api",
-			"type": "string"
-		},
-		{
-			"key": "token",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "userId",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "productId",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "categoryId",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "orderId",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "direccionId",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "rolId",
-			"value": "",
-			"type": "string"
-		}
-	],
-	"item": [
-		{
-			"name": "🔐 Autenticación",
-			"item": [
-				{
-					"name": "Registro de Usuario Cliente",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const response = pm.response.json();",
-									"    if (response.token) {",
-									"        pm.collectionVariables.set('token', response.token);",
-									"    }",
-									"    if (response.user && response.user.id_usuario) {",
-									"        pm.collectionVariables.set('userId', response.user.id_usuario);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"nombre_usuario\": \"juanperez\",\n  \"correo_electronico\": \"juan@example.com\",\n  \"contrasena\": \"password123\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/auth/register",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"register"
-							]
-						},
-						"description": "Registra un nuevo usuario cliente (por defecto). No es necesario especificar id_rol."
-					},
-					"response": []
-				},
-				{
-					"name": "Registro de Usuario Administrador",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const response = pm.response.json();",
-									"    if (response.token) {",
-									"        pm.collectionVariables.set('token', response.token);",
-									"    }",
-									"    if (response.user && response.user.id_usuario) {",
-									"        pm.collectionVariables.set('userId', response.user.id_usuario);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"nombre_usuario\": \"admin\",\n  \"correo_electronico\": \"admin@ecommerce.com\",\n  \"contrasena\": \"Admin123!\",\n  \"id_rol\": 1\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/auth/register",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"register"
-							]
-						},
-						"description": "Registra un nuevo usuario administrador. Especifica id_rol: 1"
-					},
-					"response": []
-				},
-				{
-					"name": "Registro de Usuario Vendedor",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const response = pm.response.json();",
-									"    if (response.token) {",
-									"        pm.collectionVariables.set('token', response.token);",
-									"    }",
-									"    if (response.user && response.user.id_usuario) {",
-									"        pm.collectionVariables.set('userId', response.user.id_usuario);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"nombre_usuario\": \"vendedor1\",\n  \"correo_electronico\": \"vendedor@ecommerce.com\",\n  \"contrasena\": \"Vendedor123!\",\n  \"id_rol\": 3\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/auth/register",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"register"
-							]
-						},
-						"description": "Registra un nuevo usuario vendedor. Especifica id_rol: 3"
-					},
-					"response": []
-				},
-				{
-					"name": "Login de Usuario",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    const response = pm.response.json();",
-									"    if (response.token) {",
-									"        pm.collectionVariables.set('token', response.token);",
-									"    }",
-									"    if (response.user && response.user.id_usuario) {",
-									"        pm.collectionVariables.set('userId', response.user.id_usuario);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"correo_electronico\": \"juan@example.com\",\n  \"contrasena\": \"password123\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/auth/login",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"login"
-							]
-						},
-						"description": "Inicia sesión y obtiene un token JWT"
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Perfil del Usuario",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/auth/profile",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"profile"
-							]
-						},
-						"description": "Obtiene el perfil del usuario autenticado"
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar Perfil del Usuario",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"nombre_usuario\": \"juancarlosperez\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/auth/profile",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"profile"
-							]
-						},
-						"description": "Actualiza el perfil del usuario autenticado"
-					},
-					"response": []
-				},
-				{
-					"name": "Cambiar Contraseña",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"contrasena_actual\": \"password123\",\n  \"contrasena_nueva\": \"newpassword456\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/auth/change-password",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"change-password"
-							]
-						},
-						"description": "Cambia la contraseña del usuario autenticado"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "👥 Roles",
-			"item": [
-				{
-					"name": "Obtener Todos los Roles",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/roles",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"roles"
-							]
-						},
-						"description": "Obtiene todos los roles activos del sistema"
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Rol por ID",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/roles/1",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"roles",
-								"1"
-							]
-						},
-						"description": "Obtiene un rol específico por su ID"
-					},
-					"response": []
-				},
-				{
-					"name": "Crear Rol (Admin)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"nombre_rol\": \"vendedor\",\n  \"descripcion\": \"Usuario con permisos de gestión de productos\",\n  \"permisos\": {\n    \"productos\": [\"crear\", \"editar\", \"ver\"],\n    \"categorias\": [\"ver\"],\n    \"ordenes\": [\"ver\"]\n  }\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/roles",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"roles"
-							]
-						},
-						"description": "Crea un nuevo rol (requiere rol de administrador)"
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar Rol (Admin)",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"descripcion\": \"Usuario vendedor con permisos ampliados\",\n  \"permisos\": {\n    \"productos\": [\"crear\", \"editar\", \"ver\", \"eliminar\"],\n    \"categorias\": [\"ver\", \"crear\"],\n    \"ordenes\": [\"ver\", \"editar\"]\n  }\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/roles/3",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"roles",
-								"3"
-							]
-						},
-						"description": "Actualiza un rol existente (requiere rol de administrador)"
-					},
-					"response": []
-				},
-				{
-					"name": "Eliminar Rol (Admin)",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/roles/3",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"roles",
-								"3"
-							]
-						},
-						"description": "Desactiva un rol (requiere rol de administrador)"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "🏷️ Categorías",
-			"item": [
-				{
-					"name": "Obtener Todas las Categorías",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/categorias",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"categorias"
-							]
-						},
-						"description": "Obtiene todas las categorías disponibles"
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Categoría por ID",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/categorias/{{categoryId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"categorias",
-								"{{categoryId}}"
-							]
-						},
-						"description": "Obtiene una categoría específica por su ID"
-					},
-					"response": []
-				},
-				{
-					"name": "Crear Categoría (Admin)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const response = pm.response.json();",
-									"    if (response.id_categoria) {",
-									"        pm.collectionVariables.set('categoryId', response.id_categoria);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"nombre_categoria\": \"Electrónica\",\n  \"descripcion\": \"Dispositivos electrónicos y accesorios\",\n  \"activo\": true\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/categorias",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"categorias"
-							]
-						},
-						"description": "Crea una nueva categoría (requiere rol de administrador)"
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar Categoría (Admin)",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"nombre_categoria\": \"Electrónica Actualizada\",\n  \"descripcion\": \"Dispositivos electrónicos, gadgets y accesorios\",\n  \"activo\": true\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/categorias/{{categoryId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"categorias",
-								"{{categoryId}}"
-							]
-						},
-						"description": "Actualiza una categoría existente (requiere rol de administrador)"
-					},
-					"response": []
-				},
-				{
-					"name": "Eliminar Categoría (Admin)",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/categorias/{{categoryId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"categorias",
-								"{{categoryId}}"
-							]
-						},
-						"description": "Elimina una categoría (requiere rol de administrador)"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "📦 Productos",
-			"item": [
-				{
-					"name": "Obtener Todos los Productos",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/productos",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"productos"
-							]
-						},
-						"description": "Obtiene todos los productos disponibles"
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Producto por ID",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/productos/{{productId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"productos",
-								"{{productId}}"
-							]
-						},
-						"description": "Obtiene un producto específico por su ID"
-					},
-					"response": []
-				},
-				{
-					"name": "Crear Producto (Admin)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const response = pm.response.json();",
-									"    if (response.id_producto) {",
-									"        pm.collectionVariables.set('productId', response.id_producto);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"id_categoria\": 1,\n  \"nombre_producto\": \"Laptop Dell Inspiron 15\",\n  \"descripcion\": \"Laptop con procesador Intel i5, 8GB RAM, 256GB SSD\",\n  \"precio\": 4999.99,\n  \"stock\": 10,\n  \"activo\": true\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/productos",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"productos"
-							]
-						},
-						"description": "Crea un nuevo producto (requiere rol de administrador)"
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar Producto (Admin)",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"nombre_producto\": \"Laptop Dell Inspiron 15 - Actualizada\",\n  \"descripcion\": \"Laptop con procesador Intel i7, 16GB RAM, 512GB SSD\",\n  \"precio\": 5999.99,\n  \"stock\": 15,\n  \"activo\": true\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/productos/{{productId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"productos",
-								"{{productId}}"
-							]
-						},
-						"description": "Actualiza un producto existente (requiere rol de administrador)"
-					},
-					"response": []
-				},
-				{
-					"name": "Eliminar Producto (Admin)",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/productos/{{productId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"productos",
-								"{{productId}}"
-							]
-						},
-						"description": "Elimina un producto (requiere rol de administrador)"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "🖼️ Imágenes de Productos",
-			"item": [
-				{
-					"name": "Obtener Imágenes de un Producto",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/productos/{{productId}}/imagenes",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"productos",
-								"{{productId}}",
-								"imagenes"
-							]
-						},
-						"description": "Obtiene todas las imágenes de un producto específico"
-					},
-					"response": []
-				},
-				{
-					"name": "Agregar Imagen a Producto (Admin)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"url_imagen\": \"https://example.com/images/laptop-1.jpg\",\n  \"es_principal\": true\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/productos/{{productId}}/imagenes",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"productos",
-								"{{productId}}",
-								"imagenes"
-							]
-						},
-						"description": "Agrega una imagen a un producto (requiere rol de administrador)"
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar Imagen de Producto (Admin)",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"url_imagen\": \"https://example.com/images/laptop-updated.jpg\",\n  \"es_principal\": false\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/productos/{{productId}}/imagenes/1",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"productos",
-								"{{productId}}",
-								"imagenes",
-								"1"
-							]
-						},
-						"description": "Actualiza una imagen de un producto (requiere rol de administrador)"
-					},
-					"response": []
-				},
-				{
-					"name": "Eliminar Imagen de Producto (Admin)",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/productos/{{productId}}/imagenes/1",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"productos",
-								"{{productId}}",
-								"imagenes",
-								"1"
-							]
-						},
-						"description": "Elimina una imagen de un producto (requiere rol de administrador)"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "👤 Clientes",
-			"item": [
-				{
-					"name": "Obtener Perfil del Cliente",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/clientes/perfil",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"clientes",
-								"perfil"
-							]
-						},
-						"description": "Obtiene el perfil del cliente autenticado"
-					},
-					"response": []
-				},
-				{
-					"name": "Crear/Actualizar Perfil de Cliente",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Pérez\",\n  \"telefono\": \"+502 1234-5678\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/clientes/perfil",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"clientes",
-								"perfil"
-							]
-						},
-						"description": "Crea o actualiza el perfil del cliente autenticado"
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Todos los Clientes (Admin)",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/clientes",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"clientes"
-							]
-						},
-						"description": "Obtiene todos los clientes (requiere rol de administrador)"
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Cliente por ID (Admin)",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/clientes/1",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"clientes",
-								"1"
-							]
-						},
-						"description": "Obtiene un cliente específico por su ID (requiere rol de administrador)"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "📍 Direcciones",
-			"item": [
-				{
-					"name": "Obtener Todas las Direcciones del Cliente",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/direcciones",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"direcciones"
-							]
-						},
-						"description": "Obtiene todas las direcciones del cliente autenticado"
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Dirección por ID",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/direcciones/{{direccionId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"direcciones",
-								"{{direccionId}}"
-							]
-						},
-						"description": "Obtiene una dirección específica del cliente autenticado"
-					},
-					"response": []
-				},
-				{
-					"name": "Crear Dirección",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const response = pm.response.json();",
-									"    if (response.id_direccion) {",
-									"        pm.collectionVariables.set('direccionId', response.id_direccion);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"calle\": \"Calle Principal 123\",\n  \"ciudad\": \"Guatemala\",\n  \"estado\": \"Guatemala\",\n  \"codigo_postal\": \"01001\",\n  \"pais\": \"Guatemala\",\n  \"es_principal\": true\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/direcciones",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"direcciones"
-							]
-						},
-						"description": "Crea una nueva dirección para el cliente autenticado"
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar Dirección",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"calle\": \"Calle Secundaria 456\",\n  \"ciudad\": \"Antigua Guatemala\",\n  \"estado\": \"Sacatepéquez\",\n  \"codigo_postal\": \"03001\",\n  \"pais\": \"Guatemala\",\n  \"es_principal\": false\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/direcciones/{{direccionId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"direcciones",
-								"{{direccionId}}"
-							]
-						},
-						"description": "Actualiza una dirección existente del cliente autenticado"
-					},
-					"response": []
-				},
-				{
-					"name": "Eliminar Dirección",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/direcciones/{{direccionId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"direcciones",
-								"{{direccionId}}"
-							]
-						},
-						"description": "Elimina una dirección del cliente autenticado"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "🛒 Carrito de Compras",
-			"item": [
-				{
-					"name": "Obtener Carrito",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/carrito",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"carrito"
-							]
-						},
-						"description": "Obtiene el carrito de compras del usuario autenticado"
-					},
-					"response": []
-				},
-				{
-					"name": "Agregar Producto al Carrito",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"id_producto\": {{productId}},\n  \"cantidad\": 2\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/carrito/productos",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"carrito",
-								"productos"
-							]
-						},
-						"description": "Agrega un producto al carrito de compras"
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar Cantidad de Producto en Carrito",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"cantidad\": 5\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/carrito/productos/{{productId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"carrito",
-								"productos",
-								"{{productId}}"
-							]
-						},
-						"description": "Actualiza la cantidad de un producto en el carrito"
-					},
-					"response": []
-				},
-				{
-					"name": "Eliminar Producto del Carrito",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/carrito/productos/{{productId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"carrito",
-								"productos",
-								"{{productId}}"
-							]
-						},
-						"description": "Elimina un producto del carrito de compras"
-					},
-					"response": []
-				},
-				{
-					"name": "Vaciar Carrito",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/carrito",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"carrito"
-							]
-						},
-						"description": "Vacía completamente el carrito de compras"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "📋 Órdenes",
-			"item": [
-				{
-					"name": "Crear Orden desde Carrito",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    const response = pm.response.json();",
-									"    if (response.orden && response.orden.id_orden) {",
-									"        pm.collectionVariables.set('orderId', response.orden.id_orden);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"id_direccion_envio\": {{direccionId}},\n  \"notas_orden\": \"Entregar entre 9am y 5pm\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/ordenes",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"ordenes"
-							]
-						},
-						"description": "Crea una orden a partir del carrito del usuario autenticado"
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Todas las Órdenes del Usuario",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/ordenes",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"ordenes"
-							]
-						},
-						"description": "Obtiene todas las órdenes del usuario autenticado"
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Orden por ID",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/ordenes/{{orderId}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"ordenes",
-								"{{orderId}}"
-							]
-						},
-						"description": "Obtiene una orden específica por su ID"
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Todas las Órdenes (Admin)",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/ordenes/admin/todas",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"ordenes",
-								"admin",
-								"todas"
-							]
-						},
-						"description": "Obtiene todas las órdenes de todos los usuarios (requiere rol de administrador)"
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar Estado de Orden (Admin)",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"estado_orden\": \"procesando\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/ordenes/{{orderId}}/estado",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"ordenes",
-								"{{orderId}}",
-								"estado"
-							]
-						},
-						"description": "Actualiza el estado de una orden (requiere rol de administrador). Estados válidos: pendiente, procesando, enviado, entregado, cancelado"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "💳 Pagos",
-			"item": [
-				{
-					"name": "Crear Pago para Orden",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"metodo_pago\": \"tarjeta_credito\",\n  \"monto\": 9999.98,\n  \"estado_pago\": \"completado\",\n  \"transaccion_id\": \"TXN-123456789\",\n  \"detalles_pago\": \"Pago con tarjeta Visa terminada en 4242\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/ordenes/{{orderId}}/pagos",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"ordenes",
-								"{{orderId}}",
-								"pagos"
-							]
-						},
-						"description": "Crea un pago para una orden. Métodos válidos: tarjeta_credito, tarjeta_debito, paypal, transferencia, efectivo. Estados: pendiente, procesando, completado, fallido, reembolsado, cancelado"
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Pagos de una Orden",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/ordenes/{{orderId}}/pagos",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"ordenes",
-								"{{orderId}}",
-								"pagos"
-							]
-						},
-						"description": "Obtiene todos los pagos asociados a una orden"
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Pago por ID",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/ordenes/{{orderId}}/pagos/1",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"ordenes",
-								"{{orderId}}",
-								"pagos",
-								"1"
-							]
-						},
-						"description": "Obtiene un pago específico por su ID"
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar Estado de Pago (Admin)",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"estado_pago\": \"completado\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/ordenes/{{orderId}}/pagos/1/estado",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"ordenes",
-								"{{orderId}}",
-								"pagos",
-								"1",
-								"estado"
-							]
-						},
-						"description": "Actualiza el estado de un pago (requiere rol de administrador)"
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Todos los Pagos (Admin)",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/pagos",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"pagos"
-							]
-						},
-						"description": "Obtiene todos los pagos de todas las órdenes (requiere rol de administrador)"
-					},
-					"response": []
-				}
-			]
-		}
-	],
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		},
-		{
-			"listen": "test",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		}
-	]
+  "info": {
+    "name": "E-Commerce API - Complete Collection",
+    "description": "API completa para sistema de e-commerce con autenticación JWT",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "clienteId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ordenId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "direccionId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🏠 Auth - Autenticación",
+      "item": [
+        {
+          "name": "📝 Register - Registrar usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_usuario\": \"testuser\",\n  \"correo_electronico\": \"test@example.com\",\n  \"contrasena\": \"password123\",\n  \"nombre_rol\": \"cliente\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('token', pm.response.json().token);",
+                  "    pm.collectionVariables.set('userId', pm.response.json().user.id_usuario);",
+                  "    console.log('Token guardado:', pm.collectionVariables.get('token'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "🔐 Login - Iniciar sesión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo_electronico\": \"test@example.com\",\n  \"contrasena\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.set('token', pm.response.json().token);",
+                  "    pm.collectionVariables.set('userId', pm.response.json().user.id_usuario);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "👤 Get Profile - Obtener perfil",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            }
+          }
+        },
+        {
+          "name": "✏️ Update Profile - Actualizar perfil",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_usuario\": \"testuser_updated\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            }
+          }
+        },
+        {
+          "name": "🔒 Change Password - Cambiar contraseña",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contrasena_actual\": \"password123\",\n  \"contrasena_nueva\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "change-password"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Clientes",
+      "item": [
+        {
+          "name": "📋 Get My Profile - Obtener mi perfil de cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/perfil",
+              "host": ["{{baseUrl}}"],
+              "path": ["clientes", "perfil"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.set('clienteId', pm.response.json().id_cliente);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "➕ Create Cliente - Crear perfil de cliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_usuario\": \"{{userId}}\",\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Pérez\",\n  \"telefono\": \"+502 1234-5678\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clientes",
+              "host": ["{{baseUrl}}"],
+              "path": ["clientes"]
+            }
+          }
+        },
+        {
+          "name": "✏️ Update Cliente - Actualizar cliente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan Carlos\",\n  \"apellido\": \"Pérez García\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{clienteId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["clientes", "{{clienteId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Productos",
+      "item": [
+        {
+          "name": "📋 Get All Products - Obtener todos los productos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": ["{{baseUrl}}"],
+              "path": ["productos"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 && pm.response.json().length > 0) {",
+                  "    pm.collectionVariables.set('productoId', pm.response.json()[0].id_producto);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "🔍 Get Product by ID - Obtener producto por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["productos", "{{productoId}}"]
+            }
+          }
+        },
+        {
+          "name": "➕ Create Product - Crear producto (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_categoria\": 1,\n  \"nombre_producto\": \"Laptop Gaming ASUS\",\n  \"descripcion\": \"Laptop gaming con RTX 3060, 16GB RAM, 1TB SSD\",\n  \"precio\": 8999.99,\n  \"stock\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": ["{{baseUrl}}"],
+              "path": ["productos"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏷️ Categorías",
+      "item": [
+        {
+          "name": "📋 Get All Categories - Obtener todas las categorías",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categorias",
+              "host": ["{{baseUrl}}"],
+              "path": ["categorias"]
+            }
+          }
+        },
+        {
+          "name": "🔍 Get Category by ID - Obtener categoría por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categorias/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["categorias", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📍 Direcciones",
+      "item": [
+        {
+          "name": "📋 Get My Addresses - Obtener mis direcciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/direcciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["direcciones"]
+            }
+          }
+        },
+        {
+          "name": "➕ Create Address - Crear dirección",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"calle\": \"Avenida Siempre Viva 742\",\n  \"ciudad\": \"Guatemala\",\n  \"estado\": \"Guatemala\",\n  \"codigo_postal\": \"01001\",\n  \"pais\": \"Guatemala\",\n  \"es_principal\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/direcciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["direcciones"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('direccionId', pm.response.json().direccion.id_direccion);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "🔍 Get Address by ID - Obtener dirección por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/direcciones/{{direccionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["direcciones", "{{direccionId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛒 Carrito",
+      "item": [
+        {
+          "name": "📋 Get My Cart - Obtener mi carrito",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/carrito",
+              "host": ["{{baseUrl}}"],
+              "path": ["carrito"]
+            }
+          }
+        },
+        {
+          "name": "➕ Add to Cart - Agregar producto al carrito",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_producto\": \"{{productoId}}\",\n  \"cantidad\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/carrito",
+              "host": ["{{baseUrl}}"],
+              "path": ["carrito"]
+            }
+          }
+        },
+        {
+          "name": "➖ Remove from Cart - Remover producto del carrito",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/carrito/{{productoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["carrito", "{{productoId}}"]
+            }
+          }
+        },
+        {
+          "name": "🗑️ Clear Cart - Vaciar carrito",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/carrito/clear",
+              "host": ["{{baseUrl}}"],
+              "path": ["carrito", "clear"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Órdenes",
+      "item": [
+        {
+          "name": "➕ Create Order - Crear orden desde carrito",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_direccion_envio\": \"{{direccionId}}\",\n  \"notas_orden\": \"Por favor entregar antes de las 5pm\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ordenes",
+              "host": ["{{baseUrl}}"],
+              "path": ["ordenes"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('ordenId', pm.response.json().orden.id_orden);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "📋 Get My Orders - Obtener mis órdenes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordenes",
+              "host": ["{{baseUrl}}"],
+              "path": ["ordenes"]
+            }
+          }
+        },
+        {
+          "name": "🔍 Get Order by ID - Obtener orden por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordenes/{{ordenId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["ordenes", "{{ordenId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💳 Pagos",
+      "item": [
+        {
+          "name": "📋 Get Order Payments - Obtener pagos de una orden",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordenes/{{ordenId}}/pagos",
+              "host": ["{{baseUrl}}"],
+              "path": ["ordenes", "{{ordenId}}", "pagos"]
+            }
+          }
+        },
+        {
+          "name": "➕ Create Payment - Crear pago para orden",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"metodo_pago\": \"tarjeta_credito\",\n  \"monto\": 8999.99,\n  \"estado_pago\": \"completado\",\n  \"transaccion_id\": \"txn_123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ordenes/{{ordenId}}/pagos",
+              "host": ["{{baseUrl}}"],
+              "path": ["ordenes", "{{ordenId}}", "pagos"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛠️ Admin - Funciones de Administrador",
+      "item": [
+        {
+          "name": "🔐 Admin Login - Login como administrador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo_electronico\": \"admin@ecommerce.com\",\n  \"contrasena\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.set('adminToken', pm.response.json().token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "👥 Get All Users - Obtener todos los usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios"]
+            }
+          }
+        },
+        {
+          "name": "🔄 Update Order Status - Actualizar estado de orden",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado_orden\": \"procesando\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ordenes/{{ordenId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["ordenes", "{{ordenId}}", "status"]
+            }
+          }
+        }
+      ]
+    }
+  ]
 }

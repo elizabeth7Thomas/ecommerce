@@ -50,11 +50,13 @@ JWT_SECRET=tu_secreto_jwt_super_seguro
 ```bash
 # Ejecutar el script SQL
 psql -U tu_usuario -d postgres -f src/script/completo.sql
+psql -U tu_usuario -d postgres -f src/script/create-categoria-producto.sql
+npm run setup:roles
 ```
 
 5. Iniciar el servidor
 ```bash
-npm start
+npm run dev
 ```
 
 ## 📚 Documentación API
@@ -218,4 +220,4 @@ Equipo de Desarrollo E-commerce
 
 ## 📧 Contacto
 
-Para soporte o consultas: soporte@ecommerce.com
+Para soporte o consultas: CHINGA_TU_MADRE@ecommerce.com

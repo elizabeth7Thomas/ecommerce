@@ -1,16 +1,16 @@
 import rolService from '../services/rol.service.js';
+import * as response from '../utils/response.js';
 
 const rolController = {
     // Obtener todos los roles
     async getAllRoles(req, res) {
         try {
             const roles = await rolService.getAllRoles();
-            res.json(roles);
+            res.status(200).json(response.success(roles));
         } catch (error) {
             console.error('Error en getAllRoles:', error);
-            res.status(500).json({ 
-                error: 'Error al obtener roles' 
-            });
+            const err = response.handleError(error);
+            res.status(err.statusCode || 500).json(err);
         }
     },
 
@@ -21,17 +21,14 @@ const rolController = {
             const rol = await rolService.getRolById(id);
             
             if (!rol) {
-                return res.status(404).json({ 
-                    error: 'Rol no encontrado' 
-                });
+                return res.status(404).json(response.notFound('Rol no encontrado'));
             }
 
-            res.json(rol);
+            res.status(200).json(response.success(rol));
         } catch (error) {
             console.error('Error en getRolById:', error);
-            res.status(500).json({ 
-                error: 'Error al obtener rol' 
-            });
+            const err = response.handleError(error);
+            res.status(err.statusCode || 500).json(err);
         }
     },
 
@@ -41,9 +38,7 @@ const rolController = {
             const { nombre_rol, descripcion, permisos } = req.body;
 
             if (!nombre_rol) {
-                return res.status(400).json({ 
-                    error: 'El nombre del rol es requerido' 
-                });
+                return res.status(400).json(response.badRequest('El nombre del rol es requerido'));
             }
 
             const newRol = await rolService.createRol({
@@ -52,15 +47,11 @@ const rolController = {
                 permisos: permisos || {}
             });
 
-            res.status(201).json({
-                message: 'Rol creado exitosamente',
-                rol: newRol
-            });
+            res.status(201).json(response.created(newRol, 'Rol creado exitosamente'));
         } catch (error) {
             console.error('Error en createRol:', error);
-            res.status(400).json({ 
-                error: error.message || 'Error al crear rol' 
-            });
+            const err = response.handleError(error);
+            res.status(err.statusCode || 400).json(err);
         }
     },
 
@@ -72,21 +63,14 @@ const rolController = {
 
             const updatedRol = await rolService.updateRol(id, updates);
 
-            if (!updatedRol) {
-                return res.status(404).json({ 
-                    error: 'Rol no encontrado' 
-                });
-            }
-
-            res.json({
-                message: 'Rol actualizado exitosamente',
-                rol: updatedRol
-            });
+            res.status(200).json(response.success(updatedRol, 'Rol actualizado exitosamente'));
         } catch (error) {
+            const err = response.handleError(error);
+            if (err.statusCode === 404) {
+                return res.status(404).json(err);
+            }
             console.error('Error en updateRol:', error);
-            res.status(400).json({ 
-                error: error.message || 'Error al actualizar rol' 
-            });
+            res.status(err.statusCode || 400).json(err);
         }
     },
 
@@ -96,20 +80,14 @@ const rolController = {
             const { id } = req.params;
             const deletedRol = await rolService.deleteRol(id);
 
-            if (!deletedRol) {
-                return res.status(404).json({ 
-                    error: 'Rol no encontrado' 
-                });
-            }
-
-            res.json({
-                message: 'Rol desactivado exitosamente'
-            });
+            res.status(200).json(response.noContent('Rol desactivado exitosamente'));
         } catch (error) {
+            const err = response.handleError(error);
+            if (err.statusCode === 404) {
+                return res.status(404).json(err);
+            }
             console.error('Error en deleteRol:', error);
-            res.status(500).json({ 
-                error: 'Error al eliminar rol' 
-            });
+            res.status(err.statusCode || 500).json(err);
         }
     }
 };

@@ -9,6 +9,7 @@ class UserService {
     return Usuario.findByPk(id, {
       include: [{
         model: Rol,
+        as: 'rol',
         attributes: ['id_rol', 'nombre_rol', 'descripcion', 'permisos']
       }]
     });
@@ -19,6 +20,7 @@ class UserService {
       where: { correo_electronico: email },
       include: [{
         model: Rol,
+        as: 'rol',
         attributes: ['id_rol', 'nombre_rol', 'descripcion', 'permisos']
       }]
     });
@@ -26,14 +28,14 @@ class UserService {
 
   async updateUser(id, updates) {
     const user = await Usuario.findByPk(id);
-    if (!user) return null;
+    if (!user) throw new Error('Usuario no encontrado');
     await user.update(updates);
     return user;
   }
 
   async disableUser(id) {
     const user = await Usuario.findByPk(id);
-    if (!user) return null;
+    if (!user) throw new Error('Usuario no encontrado');
     user.activo = false;
     await user.save();
     return user;

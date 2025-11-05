@@ -30,7 +30,7 @@ const CarritoProducto = sequelize.define('CarritoProducto', {
         defaultValue: DataTypes.NOW,
     },
 }, {
-    tableName: 'Carrito_Productos',
+    tableName: 'carrito_productos',
     timestamps: false,
     indexes: [
         { unique: true, fields: ['id_carrito', 'id_producto'] },

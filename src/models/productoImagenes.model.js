@@ -20,7 +20,7 @@ const ProductoImagen = sequelize.define('ProductoImagen', {
         defaultValue: false,
     },
 }, {
-    tableName: 'Producto_Imagenes',
+    tableName: 'producto_imagenes',
     timestamps: false,
 });
 

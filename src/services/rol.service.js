@@ -24,14 +24,14 @@ class RolService {
 
   async updateRol(id, updates) {
     const rol = await Rol.findByPk(id);
-    if (!rol) return null;
+    if (!rol) throw new Error('Rol no encontrado');
     await rol.update(updates);
     return rol;
   }
 
   async deleteRol(id) {
     const rol = await Rol.findByPk(id);
-    if (!rol) return null;
+    if (!rol) throw new Error('Rol no encontrado');
     rol.activo = false;
     await rol.save();
     return rol;

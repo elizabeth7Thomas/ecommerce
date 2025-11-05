@@ -36,7 +36,7 @@ const Direccion = sequelize.define('Direccion', {
         defaultValue: false,
     },
 }, {
-    tableName: 'Direcciones',
+    tableName: 'direcciones',
     timestamps: false,
 });
 

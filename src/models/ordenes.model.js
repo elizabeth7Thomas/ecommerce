@@ -32,7 +32,7 @@ const Orden = sequelize.define('Orden', {
         type: DataTypes.TEXT,
     },
 }, {
-    tableName: 'Ordenes',
+    tableName: 'ordenes',
     timestamps: true,
     createdAt: 'fecha_orden',
     updatedAt: 'fecha_actualizacion',

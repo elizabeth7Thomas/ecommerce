@@ -20,7 +20,7 @@ const CategoriaProducto = sequelize.define('CategoriaProducto', {
         defaultValue: true,
     },
 }, {
-    tableName: 'Categoria_Producto',
+    tableName: 'categoria_producto',
     timestamps: true,
     createdAt: 'fecha_creacion',
     updatedAt: false,

@@ -15,14 +15,14 @@ class ClienteService {
 
   async updateCliente(id, updates) {
     const c = await Cliente.findByPk(id);
-    if (!c) return null;
+    if (!c) throw new Error('Cliente no encontrado');
     await c.update(updates);
     return c;
   }
 
   async deleteCliente(id) {
     const c = await Cliente.findByPk(id);
-    if (!c) return null;
+    if (!c) throw new Error('Cliente no encontrado');
     await c.destroy();
     return true;
   }

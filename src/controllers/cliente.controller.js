@@ -1,12 +1,14 @@
 import clienteService from '../services/cliente.service.js';
+import * as response from '../utils/response.js';
 
 class ClienteController {
   async createCliente(req, res) {
     try {
       const cliente = await clienteService.createCliente(req.body);
-      res.status(201).json({ message: 'Cliente creado exitosamente', cliente });
+      res.status(201).json(response.created(cliente, 'Cliente creado exitosamente'));
     } catch (error) {
-      res.status(400).json({ message: error.message });
+      const err = response.handleError(error);
+      res.status(err.statusCode || 400).json(err);
     }
   }
 
@@ -15,11 +17,12 @@ class ClienteController {
       const { id } = req.params;
       const cliente = await clienteService.getClienteById(id);
       if (!cliente) {
-        return res.status(404).json({ message: 'Cliente no encontrado' });
+        return res.status(404).json(response.notFound('Cliente no encontrado'));
       }
-      res.status(200).json(cliente);
+      res.status(200).json(response.success(cliente));
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      const err = response.handleError(error);
+      res.status(err.statusCode || 500).json(err);
     }
   }
 
@@ -28,11 +31,12 @@ class ClienteController {
       const { id_usuario } = req;
       const cliente = await clienteService.getClienteByUsuarioId(id_usuario);
       if (!cliente) {
-        return res.status(404).json({ message: 'Perfil de cliente no encontrado' });
+        return res.status(404).json(response.notFound('Perfil de cliente no encontrado'));
       }
-      res.status(200).json(cliente);
+      res.status(200).json(response.success(cliente));
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      const err = response.handleError(error);
+      res.status(err.statusCode || 500).json(err);
     }
   }
 
@@ -40,12 +44,10 @@ class ClienteController {
     try {
       const { id } = req.params;
       const cliente = await clienteService.updateCliente(id, req.body);
-      if (!cliente) {
-        return res.status(404).json({ message: 'Cliente no encontrado' });
-      }
-      res.status(200).json({ message: 'Cliente actualizado', cliente });
+      res.status(200).json(response.success(cliente, 'Cliente actualizado'));
     } catch (error) {
-      res.status(400).json({ message: error.message });
+      const err = response.handleError(error);
+      res.status(err.statusCode || 400).json(err);
     }
   }
 
@@ -53,12 +55,10 @@ class ClienteController {
     try {
       const { id } = req.params;
       const result = await clienteService.deleteCliente(id);
-      if (!result) {
-        return res.status(404).json({ message: 'Cliente no encontrado' });
-      }
-      res.status(200).json({ message: 'Cliente eliminado exitosamente' });
+      res.status(200).json(response.noContent('Cliente eliminado exitosamente'));
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      const err = response.handleError(error);
+      res.status(err.statusCode || 500).json(err);
     }
   }
 }

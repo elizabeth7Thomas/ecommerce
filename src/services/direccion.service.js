@@ -15,14 +15,14 @@ class DireccionService {
 
   async updateDireccion(id, updates) {
     const d = await Direccion.findByPk(id);
-    if (!d) return null;
+    if (!d) throw new Error('Dirección no encontrada');
     await d.update(updates);
     return d;
   }
 
   async deleteDireccion(id) {
     const d = await Direccion.findByPk(id);
-    if (!d) return null;
+    if (!d) throw new Error('Dirección no encontrada');
     await d.destroy();
     return true;
   }
