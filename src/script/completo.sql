@@ -1,35 +1,15 @@
 -- ============================================
 -- SCRIPT COMPLETO PARA POSTGRESQL E-COMMERCE
--- VERSIÓN CORREGIDA
 -- ============================================
 
--- PASO 1: Eliminar base de datos si existe
+-- Eliminar base de datos si existe (CUIDADO: elimina todos los datos)
 DROP DATABASE IF EXISTS ecommerce_db;
 
--- PASO 2: Crear base de datos
+-- Crear base de datos
 CREATE DATABASE ecommerce_db;
 
--- PASO 3: Conectar a la base de datos (ejecutar en psql: \c ecommerce_db)
--- Si usas un cliente SQL, debes conectarte manualmente a ecommerce_db aquí
-
--- ============================================
--- ELIMINAR OBJETOS EXISTENTES (por seguridad)
--- ============================================
-DROP VIEW IF EXISTS vista_ordenes_detalle CASCADE;
-DROP VIEW IF EXISTS vista_productos_completos CASCADE;
-
-DROP TABLE IF EXISTS Payments CASCADE;
-DROP TABLE IF EXISTS Ordenes_Items CASCADE;
-DROP TABLE IF EXISTS Ordenes CASCADE;
-DROP TABLE IF EXISTS Carrito_Productos CASCADE;
-DROP TABLE IF EXISTS Carrito_Compras CASCADE;
-DROP TABLE IF EXISTS Producto_Imagenes CASCADE;
-DROP TABLE IF EXISTS Producto CASCADE;
-DROP TABLE IF EXISTS Categoria_Producto CASCADE;
-DROP TABLE IF EXISTS Direcciones CASCADE;
-DROP TABLE IF EXISTS Clientes CASCADE;
-DROP TABLE IF EXISTS Usuarios CASCADE;
-DROP TABLE IF EXISTS Roles CASCADE;
+-- Conectar a la base de datos
+\c ecommerce_db;
 
 -- ============================================
 -- TABLA DE ROLES
@@ -38,7 +18,7 @@ CREATE TABLE Roles (
     id_rol SERIAL PRIMARY KEY,
     nombre_rol VARCHAR(50) NOT NULL UNIQUE,
     descripcion TEXT,
-    permisos JSONB DEFAULT '{}',
+    permisos JSONB DEFAULT '{}', -- Permisos en formato JSON
     activo BOOLEAN DEFAULT true,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -60,14 +40,15 @@ CREATE TABLE Usuarios (
     id_usuario SERIAL PRIMARY KEY,
     nombre_usuario VARCHAR(100) NOT NULL UNIQUE,
     correo_electronico VARCHAR(255) NOT NULL UNIQUE,
-    contrasena VARCHAR(255) NOT NULL,
-    id_rol INTEGER NOT NULL DEFAULT 2,
+    contrasena VARCHAR(255) NOT NULL, -- Siempre almacenar contraseñas hasheadas
+    id_rol INTEGER NOT NULL DEFAULT 2, -- 2 = cliente (por defecto)
     activo BOOLEAN DEFAULT true,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_rol) REFERENCES Roles(id_rol) ON DELETE RESTRICT
 );
 
+-- Índices para Usuarios
 CREATE INDEX idx_usuarios_correo ON Usuarios(correo_electronico);
 CREATE INDEX idx_usuarios_nombre ON Usuarios(nombre_usuario);
 CREATE INDEX idx_usuarios_rol ON Usuarios(id_rol);
@@ -84,6 +65,7 @@ CREATE TABLE Clientes (
     FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE
 );
 
+-- Índice para Clientes
 CREATE INDEX idx_clientes_usuario ON Clientes(id_usuario);
 
 -- ============================================
@@ -101,6 +83,7 @@ CREATE TABLE Direcciones (
     FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente) ON DELETE CASCADE
 );
 
+-- Índice para Direcciones
 CREATE INDEX idx_direcciones_cliente ON Direcciones(id_cliente);
 
 -- ============================================
@@ -127,9 +110,10 @@ CREATE TABLE Producto (
     activo BOOLEAN DEFAULT true,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_categoria) REFERENCES Categoria_Producto(id_categoria) ON DELETE RESTRICT
+    FOREIGN KEY (id_categoria) REFERENCES Categoria_Producto(id_categoria)
 );
 
+-- Índices para Productos
 CREATE INDEX idx_productos_categoria ON Producto(id_categoria);
 CREATE INDEX idx_productos_nombre ON Producto(nombre_producto);
 CREATE INDEX idx_productos_precio ON Producto(precio);
@@ -146,6 +130,7 @@ CREATE TABLE Producto_Imagenes (
     FOREIGN KEY (id_producto) REFERENCES Producto(id_producto) ON DELETE CASCADE
 );
 
+-- Índice para Imágenes
 CREATE INDEX idx_imagenes_producto ON Producto_Imagenes(id_producto);
 
 -- ============================================
@@ -160,6 +145,7 @@ CREATE TABLE Carrito_Compras (
     FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente) ON DELETE CASCADE
 );
 
+-- Índice para Carrito
 CREATE INDEX idx_carrito_cliente ON Carrito_Compras(id_cliente);
 CREATE INDEX idx_carrito_estado ON Carrito_Compras(estado);
 
@@ -175,9 +161,10 @@ CREATE TABLE Carrito_Productos (
     fecha_agregado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_carrito) REFERENCES Carrito_Compras(id_carrito) ON DELETE CASCADE,
     FOREIGN KEY (id_producto) REFERENCES Producto(id_producto) ON DELETE CASCADE,
-    UNIQUE (id_carrito, id_producto)
+    UNIQUE (id_carrito, id_producto) -- Evitar duplicados
 );
 
+-- Índices para Carrito_Productos
 CREATE INDEX idx_carrito_productos_carrito ON Carrito_Productos(id_carrito);
 CREATE INDEX idx_carrito_productos_producto ON Carrito_Productos(id_producto);
 
@@ -194,10 +181,11 @@ CREATE TABLE Ordenes (
         CHECK (estado_orden IN ('pendiente', 'procesando', 'enviado', 'entregado', 'cancelado')),
     notas_orden TEXT,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente) ON DELETE RESTRICT,
-    FOREIGN KEY (id_direccion_envio) REFERENCES Direcciones(id_direccion) ON DELETE RESTRICT
+    FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente),
+    FOREIGN KEY (id_direccion_envio) REFERENCES Direcciones(id_direccion)
 );
 
+-- Índices para Órdenes
 CREATE INDEX idx_ordenes_cliente ON Ordenes(id_cliente);
 CREATE INDEX idx_ordenes_fecha ON Ordenes(fecha_orden);
 CREATE INDEX idx_ordenes_estado ON Ordenes(estado_orden);
@@ -213,9 +201,10 @@ CREATE TABLE Ordenes_Items (
     precio_unitario NUMERIC(10, 2) NOT NULL CHECK (precio_unitario >= 0),
     subtotal NUMERIC(10, 2) GENERATED ALWAYS AS (cantidad * precio_unitario) STORED,
     FOREIGN KEY (id_orden) REFERENCES Ordenes(id_orden) ON DELETE CASCADE,
-    FOREIGN KEY (id_producto) REFERENCES Producto(id_producto) ON DELETE RESTRICT
+    FOREIGN KEY (id_producto) REFERENCES Producto(id_producto)
 );
 
+-- Índices para Ordenes_Items
 CREATE INDEX idx_ordenes_items_orden ON Ordenes_Items(id_orden);
 CREATE INDEX idx_ordenes_items_producto ON Ordenes_Items(id_producto);
 
@@ -232,9 +221,10 @@ CREATE TABLE Payments (
     fecha_pago TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     transaccion_id VARCHAR(255),
     detalles_pago TEXT,
-    FOREIGN KEY (id_orden) REFERENCES Ordenes(id_orden) ON DELETE RESTRICT
+    FOREIGN KEY (id_orden) REFERENCES Ordenes(id_orden)
 );
 
+-- Índices para Payments
 CREATE INDEX idx_pagos_orden ON Payments(id_orden);
 CREATE INDEX idx_pagos_estado ON Payments(estado_pago);
 CREATE INDEX idx_pagos_transaccion ON Payments(transaccion_id);
@@ -243,6 +233,7 @@ CREATE INDEX idx_pagos_transaccion ON Payments(transaccion_id);
 -- FUNCIONES Y TRIGGERS
 -- ============================================
 
+-- Función para actualizar fecha_actualizacion automáticamente
 CREATE OR REPLACE FUNCTION actualizar_fecha_modificacion()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -251,49 +242,58 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Trigger para Usuarios
 CREATE TRIGGER trigger_usuarios_actualizacion
     BEFORE UPDATE ON Usuarios
     FOR EACH ROW
     EXECUTE FUNCTION actualizar_fecha_modificacion();
 
+-- Trigger para Producto
 CREATE TRIGGER trigger_producto_actualizacion
     BEFORE UPDATE ON Producto
     FOR EACH ROW
     EXECUTE FUNCTION actualizar_fecha_modificacion();
 
+-- Trigger para Carrito_Compras
 CREATE TRIGGER trigger_carrito_actualizacion
     BEFORE UPDATE ON Carrito_Compras
     FOR EACH ROW
     EXECUTE FUNCTION actualizar_fecha_modificacion();
 
+-- Trigger para Ordenes
 CREATE TRIGGER trigger_ordenes_actualizacion
     BEFORE UPDATE ON Ordenes
     FOR EACH ROW
     EXECUTE FUNCTION actualizar_fecha_modificacion();
 
 -- ============================================
--- DATOS DE EJEMPLO
+-- DATOS DE EJEMPLO (OPCIONAL)
 -- ============================================
 
+-- Insertar usuarios de prueba (contraseñas sin hashear - solo para prueba)
 INSERT INTO Usuarios (nombre_usuario, correo_electronico, contrasena, id_rol) VALUES
 ('admin', 'admin@ecommerce.com', '$2b$10$ejemplo_hash_password', 1),
 ('juan_perez', 'juan@example.com', '$2b$10$ejemplo_hash_password', 2),
 ('maria_lopez', 'maria@example.com', '$2b$10$ejemplo_hash_password', 2);
 
+-- Insertar clientes
 INSERT INTO Clientes (id_usuario, nombre, apellido, telefono) VALUES
 (2, 'Juan', 'Pérez', '+502 1234-5678'),
 (3, 'María', 'López', '+502 8765-4321');
 
+-- Insertar direcciones
 INSERT INTO Direcciones (id_cliente, calle, ciudad, estado, codigo_postal, pais, es_principal) VALUES
 (1, 'Calle Principal 123', 'Guatemala', 'Guatemala', '01001', 'Guatemala', true),
 (2, 'Avenida Reforma 456', 'Antigua', 'Sacatepéquez', '03001', 'Guatemala', true);
 
+-- Insertar categorías
 INSERT INTO Categoria_Producto (nombre_categoria, descripcion) VALUES
 ('Electrónica', 'Dispositivos electrónicos y accesorios'),
 ('Ropa', 'Vestimenta para hombre y mujer'),
 ('Hogar', 'Artículos para el hogar'),
 ('Deportes', 'Equipamiento deportivo');
 
+-- Insertar productos
 INSERT INTO Producto (id_categoria, nombre_producto, descripcion, precio, stock) VALUES
 (1, 'Laptop Dell Inspiron 15', 'Laptop con procesador Intel i5, 8GB RAM, 256GB SSD', 4999.99, 10),
 (1, 'Mouse Inalámbrico Logitech', 'Mouse ergonómico con sensor óptico', 199.99, 50),
@@ -301,6 +301,7 @@ INSERT INTO Producto (id_categoria, nombre_producto, descripcion, precio, stock)
 (3, 'Juego de Sábanas King Size', 'Sábanas de algodón egipcio 600 hilos', 599.99, 20),
 (4, 'Balón de Fútbol Adidas', 'Balón oficial tamaño 5', 249.99, 15);
 
+-- Insertar imágenes de productos
 INSERT INTO Producto_Imagenes (id_producto, url_imagen, es_principal) VALUES
 (1, '/images/laptop-dell-1.jpg', true),
 (1, '/images/laptop-dell-2.jpg', false),
@@ -313,6 +314,7 @@ INSERT INTO Producto_Imagenes (id_producto, url_imagen, es_principal) VALUES
 -- VISTAS ÚTILES
 -- ============================================
 
+-- Vista de productos con su categoría e imágenes principales
 CREATE VIEW vista_productos_completos AS
 SELECT 
     p.id_producto,
@@ -328,6 +330,7 @@ INNER JOIN Categoria_Producto c ON p.id_categoria = c.id_categoria
 LEFT JOIN Producto_Imagenes pi ON p.id_producto = pi.id_producto AND pi.es_principal = true
 WHERE p.activo = true;
 
+-- Vista de órdenes con información del cliente
 CREATE VIEW vista_ordenes_detalle AS
 SELECT 
     o.id_orden,
@@ -343,7 +346,17 @@ INNER JOIN Usuarios u ON cl.id_usuario = u.id_usuario
 INNER JOIN Direcciones d ON o.id_direccion_envio = d.id_direccion;
 
 -- ============================================
--- COMENTARIOS
+-- PERMISOS (OPCIONAL)
+-- ============================================
+
+-- Crear rol para la aplicación
+-- CREATE ROLE ecommerce_app WITH LOGIN PASSWORD 'tu_password_seguro';
+-- GRANT CONNECT ON DATABASE ecommerce_db TO ecommerce_app;
+-- GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ecommerce_app;
+-- GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ecommerce_app;
+
+-- ============================================
+-- COMENTARIOS EN TABLAS
 -- ============================================
 
 COMMENT ON TABLE Usuarios IS 'Tabla principal de autenticación y roles';
@@ -353,7 +366,13 @@ COMMENT ON TABLE Ordenes IS 'Órdenes de compra generadas';
 COMMENT ON TABLE Payments IS 'Registro de transacciones de pago';
 
 -- ============================================
--- VERIFICACIÓN
+-- FIN DEL SCRIPT
 -- ============================================
+
+-- Verificar tablas creadas
+\dt
+
+-- Verificar vistas creadas
+\dv
 
 SELECT 'Base de datos ecommerce_db creada exitosamente!' as mensaje;
