@@ -29,6 +29,18 @@ const router = Router();
  *           format: date-time
  *         transaccion_id:
  *           type: string
+ *         orden:
+ *           type: object
+ *           description: Alias correcto para acceder a la orden relacionada
+ *           properties:
+ *             id_orden:
+ *               type: integer
+ *             numero_orden:
+ *               type: string
+ *             total_orden:
+ *               type: number
+ *             estado_orden:
+ *               type: string
  *
  *     PaymentInput:
  *       type: object
@@ -73,11 +85,24 @@ const nestedRouter = Router({ mergeParams: true });
  *         description: El ID de la orden.
  *     responses:
  *       200:
- *         description: Lista de pagos de la orden.
- *       404:
- *         description: Orden no encontrada.
+ *         description: Lista de pagos de la orden
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Payment'
+ *       401:
+ *         description: No autorizado
  *       403:
- *         description: Acceso denegado (no es tu orden o no eres admin).
+ *         description: Acceso denegado (no es tu orden o no eres admin)
+ *       404:
+ *         description: Orden no encontrada
  */
 nestedRouter.get('/', [verifyToken], paymentController.getPaymentsByOrder);
 
@@ -103,11 +128,22 @@ nestedRouter.get('/', [verifyToken], paymentController.getPaymentsByOrder);
  *             $ref: '#/components/schemas/PaymentInput'
  *     responses:
  *       201:
- *         description: Pago creado exitosamente.
+ *         description: Pago creado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Payment'
  *       400:
- *         description: Datos inválidos (ej. monto incorrecto).
+ *         description: Datos inválidos (ej. monto incorrecto)
+ *       401:
+ *         description: No autorizado
  *       404:
- *         description: Orden no encontrada.
+ *         description: Orden no encontrada
  */
 nestedRouter.post('/', [verifyToken], paymentController.createPayment);
 
@@ -137,11 +173,22 @@ nestedRouter.post('/', [verifyToken], paymentController.createPayment);
  *                 type: string
  *     responses:
  *       200:
- *         description: Estado del pago actualizado.
- *       404:
- *         description: Pago no encontrado.
+ *         description: Estado del pago actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Payment'
+ *       401:
+ *         description: No autorizado
  *       403:
- *         description: Acceso denegado.
+ *         description: Acceso denegado (requiere permisos de administrador)
+ *       404:
+ *         description: Pago no encontrado
  */
 router.put('/pagos/:id/status', [verifyToken, isAdmin], paymentController.updatePaymentStatus);
 

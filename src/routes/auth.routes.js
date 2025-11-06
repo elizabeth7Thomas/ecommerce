@@ -15,70 +15,125 @@ const router = Router();
  * @swagger
  * components:
  *   schemas:
+ *     Rol:
+ *       type: object
+ *       properties:
+ *         id_rol:
+ *           type: integer
+ *         nombre_rol:
+ *           type: string
+ *         descripcion:
+ *           type: string
+ *         permisos:
+ *           type: object
+ *       example:
+ *         id_rol: 2
+ *         nombre_rol: "cliente"
+ *         descripcion: "Usuario cliente"
+ *         permisos: {}
+ *
  *     Usuario:
  *       type: object
  *       properties:
  *         id_usuario:
  *           type: integer
- *         nombre:
+ *         nombre_usuario:
  *           type: string
- *         email:
+ *         correo_electronico:
  *           type: string
  *           format: email
- *         telefono:
+ *         id_rol:
+ *           type: integer
+ *         nombre_rol:
  *           type: string
  *         rol:
+ *           $ref: '#/components/schemas/Rol'
+ *         activo:
+ *           type: boolean
+ *         fecha_creacion:
  *           type: string
- *           enum: [cliente, administrador]
+ *           format: date-time
  *       example:
- *         id_usuario: 1
- *         nombre: "Juan Pérez"
- *         email: "juan@example.com"
- *         telefono: "555-1234"
- *         rol: "cliente"
+ *         id_usuario: 5
+ *         nombre_usuario: "juan_perez"
+ *         correo_electronico: "juan@example.com"
+ *         id_rol: 2
+ *         nombre_rol: "cliente"
+ *         rol:
+ *           id_rol: 2
+ *           nombre_rol: "cliente"
+ *           descripcion: "Usuario cliente"
+ *           permisos: {}
+ *         activo: true
+ *         fecha_creacion: "2025-11-05T10:30:00.000Z"
  *     
  *     UsuarioRegistro:
  *       type: object
  *       required:
- *         - nombre
- *         - email
- *         - password
+ *         - nombre_usuario
+ *         - correo_electronico
+ *         - contrasena
  *       properties:
- *         nombre:
+ *         nombre_usuario:
  *           type: string
- *           description: Nombre completo del usuario
- *         email:
+ *           description: Nombre único del usuario
+ *         correo_electronico:
  *           type: string
  *           format: email
  *           description: Email único del usuario
- *         password:
+ *         contrasena:
  *           type: string
  *           format: password
- *           description: Contraseña (mínimo 6 caracteres)
- *         telefono:
+ *           description: Contraseña del usuario
+ *         nombre_rol:
  *           type: string
- *           description: Número de teléfono del usuario
+ *           description: Nombre del rol (opcional, por defecto "cliente")
  *       example:
- *         nombre: "Juan Pérez"
- *         email: "juan@example.com"
- *         password: "password123"
- *         telefono: "555-1234"
+ *         nombre_usuario: "juan_perez"
+ *         correo_electronico: "juan@example.com"
+ *         contrasena: "SecurePass123"
+ *         nombre_rol: "cliente"
  *     
  *     UsuarioLogin:
  *       type: object
  *       required:
- *         - email
- *         - password
+ *         - correo_electronico
+ *         - contrasena
  *       properties:
- *         email:
+ *         correo_electronico:
  *           type: string
  *           format: email
- *         password:
+ *         contrasena:
  *           type: string
  *           format: password
  *       example:
- *         email: "juan@example.com"
- *         password: "password123"
+ *         correo_electronico: "juan@example.com"
+ *         contrasena: "SecurePass123"
+ *     
+ *     AuthResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         message:
+ *           type: string
+ *         data:
+ *           type: object
+ *           properties:
+ *             id_usuario:
+ *               type: integer
+ *             nombre_usuario:
+ *               type: string
+ *             correo_electronico:
+ *               type: string
+ *             id_rol:
+ *               type: integer
+ *             nombre_rol:
+ *               type: string
+ *             permisos:
+ *               type: object
+ *             token:
+ *               type: string
  */
 
 /**
@@ -99,15 +154,7 @@ const router = Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 user:
- *                   $ref: '#/components/schemas/Usuario'
- *                 token:
- *                   type: string
- *                   description: Token JWT para autenticación
+ *               $ref: '#/components/schemas/AuthResponse'
  *       400:
  *         description: Error en los datos de registro
  */
@@ -131,15 +178,7 @@ router.post('/register', authController.register);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 user:
- *                   $ref: '#/components/schemas/Usuario'
- *                 token:
- *                   type: string
- *                   description: Token JWT para autenticación
+ *               $ref: '#/components/schemas/AuthResponse'
  *       401:
  *         description: Credenciales inválidas
  *       400:
@@ -157,7 +196,7 @@ router.post('/login', authController.login);
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Perfil del usuario
+ *         description: Perfil del usuario con su rol incluido
  *         content:
  *           application/json:
  *             schema:
@@ -165,7 +204,7 @@ router.post('/login', authController.login);
  *       404:
  *         description: Usuario no encontrado
  *       401:
- *         description: No autorizado
+ *         description: No autorizado - Token inválido o expirado
  */
 router.get('/profile', [verifyToken], authController.getProfile);
 
@@ -184,10 +223,9 @@ router.get('/profile', [verifyToken], authController.getProfile);
  *           schema:
  *             type: object
  *             properties:
- *               nombre:
+ *               nombre_usuario:
  *                 type: string
- *               telefono:
- *                 type: string
+ *                 description: Nuevo nombre de usuario
  *     responses:
  *       200:
  *         description: Perfil actualizado exitosamente
@@ -197,6 +235,42 @@ router.get('/profile', [verifyToken], authController.getProfile);
  *         description: No autorizado
  */
 router.put('/profile', [verifyToken], authController.updateProfile);
+
+/**
+ * @swagger
+ * /api/auth/change-password:
+ *   put:
+ *     summary: Cambia la contraseña del usuario autenticado
+ *     tags: [Autenticación]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - contrasena_actual
+ *               - contrasena_nueva
+ *             properties:
+ *               contrasena_actual:
+ *                 type: string
+ *                 format: password
+ *                 description: Contraseña actual
+ *               contrasena_nueva:
+ *                 type: string
+ *                 format: password
+ *                 description: Nueva contraseña
+ *     responses:
+ *       204:
+ *         description: Contraseña actualizada exitosamente
+ *       401:
+ *         description: Contraseña actual incorrecta o no autorizado
+ *       400:
+ *         description: Datos requeridos faltantes
+ */
+router.put('/change-password', [verifyToken], authController.changePassword);
 
 /**
  * @swagger

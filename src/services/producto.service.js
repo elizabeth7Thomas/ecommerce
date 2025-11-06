@@ -12,11 +12,22 @@ class ProductoService {
 
     async getAllProductos({ activoOnly = true } = {}) {
         const where = activoOnly ? { activo: true } : {};
-        return Producto.findAll({ where, include: [CategoriaProducto, ProductoImagen] });
+        return Producto.findAll({ 
+            where, 
+            include: [
+                { model: CategoriaProducto, as: 'categoria' },
+                { model: ProductoImagen, as: 'imagenes' }
+            ] 
+        });
     }
 
     async getProductoById(id) {
-        const producto = await Producto.findByPk(id, { include: [CategoriaProducto, ProductoImagen] });
+        const producto = await Producto.findByPk(id, { 
+            include: [
+                { model: CategoriaProducto, as: 'categoria' },
+                { model: ProductoImagen, as: 'imagenes' }
+            ] 
+        });
         if (!producto) throw new Error('Producto no encontrado');
         return producto;
     }

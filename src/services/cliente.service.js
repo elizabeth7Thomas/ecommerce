@@ -6,7 +6,9 @@ class ClienteService {
   }
 
   async getClienteById(id) {
-    return Cliente.findByPk(id, { include: [Usuario] });
+    return Cliente.findByPk(id, { 
+      include: [{ model: Usuario, as: 'usuario' }] 
+    });
   }
 
   async getClienteByUsuarioId(id_usuario) {

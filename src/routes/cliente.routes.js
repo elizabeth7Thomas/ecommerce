@@ -28,12 +28,29 @@ const router = Router();
  *           type: string
  *         telefono:
  *           type: string
+ *         usuario:
+ *           type: object
+ *           description: Alias correcto para acceder al usuario relacionado
+ *           properties:
+ *             id_usuario:
+ *               type: integer
+ *             nombre_usuario:
+ *               type: string
+ *             correo_electronico:
+ *               type: string
+ *             estado_usuario:
+ *               type: string
  *       example:
  *         id_cliente: 1
  *         id_usuario: 2
  *         nombre: "Juan"
  *         apellido: "Pérez"
  *         telefono: "+502 1234-5678"
+ *         usuario:
+ *           id_usuario: 2
+ *           nombre_usuario: "jperez"
+ *           correo_electronico: "juan@example.com"
+ *           estado_usuario: "activo"
  */
 
 /**
@@ -97,9 +114,23 @@ router.post('/', [verifyToken], clienteController.createCliente);
  *         schema:
  *           type: integer
  *         required: true
+ *         description: El ID del cliente
  *     responses:
  *       200:
- *         description: Detalle del cliente
+ *         description: Detalle del cliente con información del usuario asociado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Cliente'
+ *       401:
+ *         description: No autorizado
+ *       403:
+ *         description: Acceso denegado (requiere permisos de administrador)
  *       404:
  *         description: Cliente no encontrado
  */

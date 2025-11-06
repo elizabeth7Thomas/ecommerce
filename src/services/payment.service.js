@@ -42,12 +42,15 @@ class PaymentService {
     async updatePaymentStatus(id_pago, nuevo_estado) {
         const t = await sequelize.transaction();
         try {
-            const pago = await Payment.findByPk(id_pago, { transaction: t, include: [Orden] });
+            const pago = await Payment.findByPk(id_pago, { 
+                transaction: t, 
+                include: [{ model: Orden, as: 'orden' }] 
+            });
             if (!pago) throw new Error('Pago no encontrado');
 
             await pago.update({ estado_pago: nuevo_estado }, { transaction: t });
 
-            const orden = pago.Orden;
+            const orden = pago.orden;
             if (nuevo_estado === 'completado' && orden.estado_orden === 'pendiente') {
                 await orden.update({ estado_orden: 'procesando' }, { transaction: t });
             } else if (nuevo_estado === 'reembolsado' || nuevo_estado === 'cancelado') {

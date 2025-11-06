@@ -20,11 +20,15 @@ class OrdenService {
             // 1. Encontrar el carrito activo del cliente con sus productos
             const carrito = await CarritoCompras.findOne({
                 where: { id_cliente: idCliente, estado: 'activo' },
-                include: [{ model: CarritoProducto, include: [Producto] }],
+                include: [{ 
+                    model: CarritoProducto, 
+                    as: 'productosCarrito',
+                    include: [{ model: Producto, as: 'producto' }] 
+                }],
                 transaction: t,
             });
 
-            if (!carrito || !carrito.CarritoProductos || carrito.CarritoProductos.length === 0) {
+            if (!carrito || !carrito.productosCarrito || carrito.productosCarrito.length === 0) {
                 throw new Error('El carrito está vacío o no se encontró.');
             }
 
@@ -35,8 +39,8 @@ class OrdenService {
             }
 
             // 3. Calcular el total de la orden
-            const total_orden = carrito.CarritoProductos.reduce((total, item) => {
-                const precio = Number(item.Producto.precio);
+            const total_orden = carrito.productosCarrito.reduce((total, item) => {
+                const precio = Number(item.producto.precio);
                 return total + (Number(item.cantidad) * precio);
             }, 0);
 
@@ -50,8 +54,8 @@ class OrdenService {
             }, { transaction: t });
 
             // 5. Mover productos del carrito a Ordenes_Items y actualizar stock
-            for (const item of carrito.CarritoProductos) {
-                const producto = item.Producto;
+            for (const item of carrito.productosCarrito) {
+                const producto = item.producto;
 
                 // Verificar stock
                 if (Number(producto.stock) < Number(item.cantidad)) {
@@ -87,7 +91,9 @@ class OrdenService {
      */
     async getAllOrders() {
         return Orden.findAll({
-            include: [{ model: Cliente, include: [Usuario] }],
+            include: [
+                { model: Cliente, as: 'cliente', include: [{ model: Usuario, as: 'usuario' }] }
+            ],
             order: [['fecha_orden', 'DESC']],
         });
     }
@@ -108,9 +114,9 @@ class OrdenService {
     async getOrderDetailsById(id_orden) {
         const orden = await Orden.findByPk(id_orden, {
             include: [
-                { model: Cliente, include: [{ model: Usuario, attributes: ['nombre_usuario', 'correo_electronico'] }] },
-                { model: Direccion },
-                { model: OrdenItem, include: [{ model: Producto, attributes: ['nombre_producto', 'precio'] }] }
+                { model: Cliente, as: 'cliente', include: [{ model: Usuario, as: 'usuario', attributes: ['nombre_usuario', 'correo_electronico'] }] },
+                { model: Direccion, as: 'direccionEnvio' },
+                { model: OrdenItem, as: 'items', include: [{ model: Producto, as: 'producto', attributes: ['nombre_producto', 'precio'] }] }
             ]
         });
         if (!orden) {

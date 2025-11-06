@@ -9,45 +9,80 @@ const router = Router();
  * @swagger
  * components:
  *   schemas:
+ *     CategoriaProducto:
+ *       type: object
+ *       properties:
+ *         id_categoria:
+ *           type: integer
+ *         nombre_categoria:
+ *           type: string
+ *         descripcion:
+ *           type: string
+ *         activo:
+ *           type: boolean
+ *
+ *     ProductoImagen:
+ *       type: object
+ *       properties:
+ *         id_imagen:
+ *           type: integer
+ *         id_producto:
+ *           type: integer
+ *         url_imagen:
+ *           type: string
+ *           format: uri
+ *         es_principal:
+ *           type: boolean
+ *
  *     Producto:
  *       type: object
  *       properties:
  *         id_producto:
  *           type: integer
- *           description: El ID autogenerado del producto.
+ *           description: El ID autogenerado del producto
  *         id_categoria:
  *           type: integer
- *           description: El ID de la categoría a la que pertenece el producto.
+ *           description: El ID de la categoría
  *         nombre_producto:
  *           type: string
- *           description: El nombre del producto.
+ *           description: El nombre del producto
  *         descripcion:
  *           type: string
- *           description: Descripción detallada del producto.
+ *           description: Descripción detallada del producto
  *         precio:
  *           type: number
- *           format: float
- *           description: El precio del producto.
+ *           format: double
+ *           description: El precio del producto
  *         stock:
  *           type: integer
- *           description: La cantidad disponible en inventario.
+ *           description: La cantidad disponible en inventario
  *         activo:
  *           type: boolean
- *           description: Indica si el producto está disponible para la venta.
- *         Categoria_Producto:
- *           type: object
- *           properties:
- *             nombre_categoria:
- *               type: string
- *               description: El nombre de la categoría del producto.
+ *           description: Indica si el producto está disponible
+ *         categoria:
+ *           $ref: '#/components/schemas/CategoriaProducto'
+ *           description: Categoría del producto (alias correcto)
+ *         imagenes:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/ProductoImagen'
+ *           description: Imágenes del producto (alias correcto)
  *       example:
  *         id_producto: 1
  *         id_categoria: 1
- *         nombre_producto: "Laptop Dell Inspiron 15"
- *         descripcion: "Laptop con procesador Intel i5, 8GB RAM, 256GB SSD"
- *         precio: 4999.99
+ *         nombre_producto: "Laptop Gaming Pro"
+ *         descripcion: "Laptop con procesador Intel i7, 16GB RAM, 512GB SSD"
+ *         precio: 1299.99
  *         stock: 10
  *         activo: true
+ *         categoria:
+ *           id_categoria: 1
+ *           nombre_categoria: "Electrónica"
+ *           descripcion: "Equipos electrónicos"
+ *         imagenes:
+ *           - id_imagen: 1
+ *             url_imagen: "https://cdn.example.com/producto1.jpg"
+ *             es_principal: true
  *         Categoria_Producto:
  *           nombre_categoria: "Electrónica"
  *

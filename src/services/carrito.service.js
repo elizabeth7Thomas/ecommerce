@@ -12,7 +12,17 @@ class CarritoService {
   }
 
   async getCartByCliente(id_cliente) {
-    return CarritoCompras.findOne({ where: { id_cliente, estado: 'activo' }, include: [{ model: CarritoProducto, include: [Producto] }] });
+    return CarritoCompras.findOne({ 
+      where: { id_cliente, estado: 'activo' }, 
+      include: [{ 
+        model: CarritoProducto, 
+        as: 'productosCarrito',
+        include: [{ 
+          model: Producto,
+          as: 'producto'
+        }] 
+      }] 
+    });
   }
 
   async addProductToCart(id_cliente, id_producto, cantidad = 1) {
