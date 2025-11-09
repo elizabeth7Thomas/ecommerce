@@ -4,7 +4,12 @@ import * as response from '../utils/response.js';
 class ClienteController {
   async createCliente(req, res) {
     try {
-      const cliente = await clienteService.createCliente(req.body);
+      const { id_usuario } = req; // ← Del token JWT (middleware verifyToken)
+      const clienteData = {
+        ...req.body,
+        id_usuario // ← Se asigna automáticamente
+      };
+      const cliente = await clienteService.createCliente(clienteData);
       res.status(201).json(response.created(cliente, 'Cliente creado exitosamente'));
     } catch (error) {
       const err = response.handleError(error);

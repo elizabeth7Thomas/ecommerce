@@ -366,6 +366,283 @@ COMMENT ON TABLE Ordenes IS 'Órdenes de compra generadas';
 COMMENT ON TABLE Payments IS 'Registro de transacciones de pago';
 
 -- ============================================
+-- EXTENSIÓN CRM PARA E-COMMERCE
+-- ============================================
+
+-- ============================================
+-- 1. TABLA DE INTERACCIONES CON CLIENTES
+-- ============================================
+CREATE TABLE Interacciones_Cliente (
+    id_interaccion SERIAL PRIMARY KEY,
+    id_cliente INTEGER NOT NULL,
+    id_usuario_asignado INTEGER,
+    tipo_interaccion VARCHAR(50) NOT NULL 
+        CHECK (tipo_interaccion IN ('llamada', 'email', 'chat', 'reunion', 'nota', 'reclamo', 'consulta')),
+    descripcion TEXT NOT NULL,
+    resultado VARCHAR(100),
+    fecha_interaccion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    proxima_accion TEXT,
+    fecha_proxima_accion DATE,
+    estado VARCHAR(30) DEFAULT 'pendiente'
+        CHECK (estado IN ('pendiente', 'en_proceso', 'completado', 'cancelado')),
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario_asignado) REFERENCES Usuarios(id_usuario) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_interacciones_cliente ON Interacciones_Cliente(id_cliente);
+CREATE INDEX idx_interacciones_usuario ON Interacciones_Cliente(id_usuario_asignado);
+CREATE INDEX idx_interacciones_fecha ON Interacciones_Cliente(fecha_interaccion);
+CREATE INDEX idx_interacciones_estado ON Interacciones_Cliente(estado);
+
+-- ============================================
+-- 2. TABLA DE OPORTUNIDADES DE VENTA (LEADS)
+-- ============================================
+CREATE TABLE Oportunidades_Venta (
+    id_oportunidad SERIAL PRIMARY KEY,
+    id_cliente INTEGER NOT NULL,
+    id_usuario_asignado INTEGER,
+    titulo VARCHAR(255) NOT NULL,
+    descripcion TEXT,
+    valor_estimado NUMERIC(10, 2) CHECK (valor_estimado >= 0),
+    probabilidad_cierre INTEGER CHECK (probabilidad_cierre BETWEEN 0 AND 100),
+    etapa VARCHAR(50) NOT NULL DEFAULT 'prospecto'
+        CHECK (etapa IN ('prospecto', 'contactado', 'calificado', 'propuesta', 'negociacion', 'ganado', 'perdido')),
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_cierre_estimada DATE,
+    fecha_cierre_real DATE,
+    motivo_perdida TEXT,
+    estado VARCHAR(20) DEFAULT 'activo'
+        CHECK (estado IN ('activo', 'cerrado', 'cancelado')),
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario_asignado) REFERENCES Usuarios(id_usuario) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_oportunidades_cliente ON Oportunidades_Venta(id_cliente);
+CREATE INDEX idx_oportunidades_etapa ON Oportunidades_Venta(etapa);
+CREATE INDEX idx_oportunidades_usuario ON Oportunidades_Venta(id_usuario_asignado);
+CREATE INDEX idx_oportunidades_estado ON Oportunidades_Venta(estado);
+
+-- ============================================
+-- 3. TABLA DE TAREAS/ACTIVIDADES CRM
+-- ============================================
+CREATE TABLE Tareas_CRM (
+    id_tarea SERIAL PRIMARY KEY,
+    id_cliente INTEGER,
+    id_oportunidad INTEGER,
+    id_usuario_asignado INTEGER NOT NULL,
+    titulo VARCHAR(255) NOT NULL,
+    descripcion TEXT,
+    tipo_tarea VARCHAR(50) NOT NULL
+        CHECK (tipo_tarea IN ('llamada', 'email', 'reunion', 'seguimiento', 'cotizacion', 'otro')),
+    prioridad VARCHAR(20) DEFAULT 'media'
+        CHECK (prioridad IN ('baja', 'media', 'alta', 'urgente')),
+    fecha_vencimiento TIMESTAMP,
+    fecha_completado TIMESTAMP,
+    estado VARCHAR(30) DEFAULT 'pendiente'
+        CHECK (estado IN ('pendiente', 'en_proceso', 'completado', 'cancelado')),
+    notas TEXT,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente) ON DELETE CASCADE,
+    FOREIGN KEY (id_oportunidad) REFERENCES Oportunidades_Venta(id_oportunidad) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario_asignado) REFERENCES Usuarios(id_usuario) ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_tareas_cliente ON Tareas_CRM(id_cliente);
+CREATE INDEX idx_tareas_usuario ON Tareas_CRM(id_usuario_asignado);
+CREATE INDEX idx_tareas_estado ON Tareas_CRM(estado);
+CREATE INDEX idx_tareas_vencimiento ON Tareas_CRM(fecha_vencimiento);
+CREATE INDEX idx_tareas_oportunidad ON Tareas_CRM(id_oportunidad);
+
+-- ============================================
+-- 4. TABLA DE SEGMENTACIÓN DE CLIENTES
+-- ============================================
+CREATE TABLE Segmentos_Cliente (
+    id_segmento SERIAL PRIMARY KEY,
+    nombre_segmento VARCHAR(100) NOT NULL UNIQUE,
+    descripcion TEXT,
+    criterios JSONB,
+    activo BOOLEAN DEFAULT true,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla de relación muchos a muchos
+CREATE TABLE Cliente_Segmentos (
+    id_cliente INTEGER NOT NULL,
+    id_segmento INTEGER NOT NULL,
+    fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_cliente, id_segmento),
+    FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente) ON DELETE CASCADE,
+    FOREIGN KEY (id_segmento) REFERENCES Segmentos_Cliente(id_segmento) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_cliente_segmentos_cliente ON Cliente_Segmentos(id_cliente);
+CREATE INDEX idx_cliente_segmentos_segmento ON Cliente_Segmentos(id_segmento);
+
+-- ============================================
+-- 5. TABLA DE CAMPAÑAS DE MARKETING
+-- ============================================
+CREATE TABLE Campanas_Marketing (
+    id_campana SERIAL PRIMARY KEY,
+    nombre_campana VARCHAR(255) NOT NULL,
+    descripcion TEXT,
+    tipo_campana VARCHAR(50) NOT NULL
+        CHECK (tipo_campana IN ('email', 'sms', 'redes_sociales', 'telefonica', 'mixta')),
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE,
+    presupuesto NUMERIC(10, 2),
+    objetivo TEXT,
+    estado VARCHAR(30) DEFAULT 'planificada'
+        CHECK (estado IN ('planificada', 'activa', 'pausada', 'completada', 'cancelada')),
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Relación de clientes en campañas
+CREATE TABLE Campana_Clientes (
+    id_campana_cliente SERIAL PRIMARY KEY,
+    id_campana INTEGER NOT NULL,
+    id_cliente INTEGER NOT NULL,
+    fecha_envio TIMESTAMP,
+    estado_envio VARCHAR(30) DEFAULT 'pendiente'
+        CHECK (estado_envio IN ('pendiente', 'enviado', 'abierto', 'respondido', 'fallido')),
+    fecha_apertura TIMESTAMP,
+    fecha_respuesta TIMESTAMP,
+    notas TEXT,
+    UNIQUE (id_campana, id_cliente),
+    FOREIGN KEY (id_campana) REFERENCES Campanas_Marketing(id_campana) ON DELETE CASCADE,
+    FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_campana_clientes_campana ON Campana_Clientes(id_campana);
+CREATE INDEX idx_campana_clientes_cliente ON Campana_Clientes(id_cliente);
+CREATE INDEX idx_campana_clientes_estado ON Campana_Clientes(estado_envio);
+
+-- ============================================
+-- TRIGGERS PARA TABLAS CRM
+-- ============================================
+
+-- Trigger para Interacciones_Cliente
+CREATE TRIGGER trigger_interacciones_actualizacion
+    BEFORE UPDATE ON Interacciones_Cliente
+    FOR EACH ROW
+    EXECUTE FUNCTION actualizar_fecha_modificacion();
+
+-- Trigger para Oportunidades_Venta
+CREATE TRIGGER trigger_oportunidades_actualizacion
+    BEFORE UPDATE ON Oportunidades_Venta
+    FOR EACH ROW
+    EXECUTE FUNCTION actualizar_fecha_modificacion();
+
+-- Trigger para Tareas_CRM
+CREATE TRIGGER trigger_tareas_actualizacion
+    BEFORE UPDATE ON Tareas_CRM
+    FOR EACH ROW
+    EXECUTE FUNCTION actualizar_fecha_modificacion();
+
+-- Trigger para Segmentos_Cliente
+CREATE TRIGGER trigger_segmentos_actualizacion
+    BEFORE UPDATE ON Segmentos_Cliente
+    FOR EACH ROW
+    EXECUTE FUNCTION actualizar_fecha_modificacion();
+
+-- Trigger para Campanas_Marketing
+CREATE TRIGGER trigger_campanas_actualizacion
+    BEFORE UPDATE ON Campanas_Marketing
+    FOR EACH ROW
+    EXECUTE FUNCTION actualizar_fecha_modificacion();
+
+-- ============================================
+-- VISTAS CRM ÚTILES
+-- ============================================
+
+-- Vista de clientes con actividad reciente
+CREATE VIEW vista_clientes_actividad AS
+SELECT 
+    c.id_cliente,
+    c.nombre || ' ' || c.apellido as nombre_completo,
+    u.correo_electronico,
+    c.telefono,
+    COUNT(DISTINCT o.id_orden) as total_ordenes,
+    COALESCE(SUM(o.total_orden), 0) as valor_total_compras,
+    MAX(o.fecha_orden) as ultima_compra,
+    COUNT(DISTINCT i.id_interaccion) as total_interacciones,
+    MAX(i.fecha_interaccion) as ultima_interaccion
+FROM Clientes c
+INNER JOIN Usuarios u ON c.id_usuario = u.id_usuario
+LEFT JOIN Ordenes o ON c.id_cliente = o.id_cliente
+LEFT JOIN Interacciones_Cliente i ON c.id_cliente = i.id_cliente
+GROUP BY c.id_cliente, c.nombre, c.apellido, u.correo_electronico, c.telefono;
+
+-- Vista de pipeline de ventas
+CREATE VIEW vista_pipeline_ventas AS
+SELECT 
+    ov.etapa,
+    COUNT(*) as cantidad_oportunidades,
+    SUM(ov.valor_estimado) as valor_total,
+    AVG(ov.probabilidad_cierre) as probabilidad_promedio,
+    COUNT(CASE WHEN ov.fecha_cierre_estimada < CURRENT_DATE THEN 1 END) as vencidas
+FROM Oportunidades_Venta ov
+WHERE ov.estado = 'activo'
+GROUP BY ov.etapa
+ORDER BY 
+    CASE ov.etapa
+        WHEN 'prospecto' THEN 1
+        WHEN 'contactado' THEN 2
+        WHEN 'calificado' THEN 3
+        WHEN 'propuesta' THEN 4
+        WHEN 'negociacion' THEN 5
+        WHEN 'ganado' THEN 6
+        WHEN 'perdido' THEN 7
+    END;
+
+-- Vista de tareas pendientes por usuario
+CREATE VIEW vista_tareas_pendientes AS
+SELECT 
+    t.id_tarea,
+    t.titulo,
+    t.tipo_tarea,
+    t.prioridad,
+    t.fecha_vencimiento,
+    u.nombre_usuario as asignado_a,
+    c.nombre || ' ' || c.apellido as cliente,
+    CASE 
+        WHEN t.fecha_vencimiento < CURRENT_TIMESTAMP THEN 'Vencida'
+        WHEN t.fecha_vencimiento < CURRENT_TIMESTAMP + INTERVAL '1 day' THEN 'Urgente'
+        ELSE 'A tiempo'
+    END as estado_vencimiento
+FROM Tareas_CRM t
+INNER JOIN Usuarios u ON t.id_usuario_asignado = u.id_usuario
+LEFT JOIN Clientes c ON t.id_cliente = c.id_cliente
+WHERE t.estado IN ('pendiente', 'en_proceso')
+ORDER BY t.prioridad DESC, t.fecha_vencimiento ASC;
+
+-- ============================================
+-- DATOS DE EJEMPLO PARA CRM
+-- ============================================
+
+-- Insertar segmentos
+INSERT INTO Segmentos_Cliente (nombre_segmento, descripcion, criterios) VALUES
+('VIP', 'Clientes con compras superiores a Q5000', '{"compras_minimas": 5000}'::jsonb),
+('Frecuente', 'Clientes con más de 5 compras', '{"numero_compras": 5}'::jsonb),
+('Inactivo', 'Sin compras en los últimos 6 meses', '{"dias_inactividad": 180}'::jsonb),
+('Nuevo', 'Cliente registrado hace menos de 30 días', '{"dias_desde_registro": 30}'::jsonb);
+
+-- ============================================
+-- COMENTARIOS EN TABLAS CRM
+-- ============================================
+
+COMMENT ON TABLE Interacciones_Cliente IS 'Registro de todas las interacciones con clientes (llamadas, emails, etc)';
+COMMENT ON TABLE Oportunidades_Venta IS 'Pipeline de ventas y oportunidades de negocio';
+COMMENT ON TABLE Tareas_CRM IS 'Gestión de tareas y actividades del equipo de ventas';
+COMMENT ON TABLE Segmentos_Cliente IS 'Segmentación de clientes para marketing dirigido';
+COMMENT ON TABLE Campanas_Marketing IS 'Campañas de marketing y su gestión';
+
+-- ============================================
 -- FIN DEL SCRIPT
 -- ============================================
 
@@ -375,4 +652,4 @@ COMMENT ON TABLE Payments IS 'Registro de transacciones de pago';
 -- Verificar vistas creadas
 \dv
 
-SELECT 'Base de datos ecommerce_db creada exitosamente!' as mensaje;
+SELECT 'Base de datos ecommerce_db con CRM creada exitosamente!' as mensaje;

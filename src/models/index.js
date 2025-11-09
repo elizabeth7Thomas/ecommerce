@@ -11,6 +11,23 @@ import CarritoProducto from './carritoProducto.model.js';
 import Orden from './ordenes.model.js';
 import OrdenItem from './ordenesItems.model.js';
 import Payment from './payments.model.js';
+// CRM Models
+import InteraccionesCliente from './interaccionesCliente.model.js';
+import OportunidadesVenta from './oportunidadesVenta.model.js';
+import TareasCRM from './tareasCRM.model.js';
+import SegmentosCliente from './segmentosCliente.model.js';
+import ClienteSegmentos from './clienteSegmentos.model.js';
+import CampanasMarketing from './campanasMarketing.model.js';
+import CampanaClientes from './campanaClientes.model.js';
+
+// Inventory Models
+import Almacenes from './almacenes.model.js';
+import Inventario from './inventario.model.js';
+import MovimientosInventario from './movimientosInventario.model.js';
+import Proveedores from './proveedores.model.js';
+import OrdenesCompra from './ordenesCompra.model.js';
+import OrdenesCompraDetalle from './ordenesCompraDetalle.model.js';
+import AlertasInventario from './alertasInventario.model.js';
 
 // Associations con opciones mejoradas
 const setupAssociations = () => {
@@ -153,6 +170,248 @@ const setupAssociations = () => {
     foreignKey: 'id_orden',
     as: 'orden'
   });
+
+  // ==========================================
+  // RELACIONES CRM
+  // ==========================================
+
+  // Cliente -> InteraccionesCliente (1:N)
+  Cliente.hasMany(InteraccionesCliente, { 
+    foreignKey: 'id_cliente',
+    as: 'interacciones',
+    onDelete: 'CASCADE'
+  });
+  InteraccionesCliente.belongsTo(Cliente, { 
+    foreignKey: 'id_cliente',
+    as: 'cliente'
+  });
+
+  // Usuario -> InteraccionesCliente (1:N)
+  Usuario.hasMany(InteraccionesCliente, { 
+    foreignKey: 'id_usuario_asignado',
+    as: 'interaccionesAsignadas',
+    onDelete: 'SET NULL'
+  });
+  InteraccionesCliente.belongsTo(Usuario, { 
+    foreignKey: 'id_usuario_asignado',
+    as: 'usuarioAsignado'
+  });
+
+  // Cliente -> OportunidadesVenta (1:N)
+  Cliente.hasMany(OportunidadesVenta, { 
+    foreignKey: 'id_cliente',
+    as: 'oportunidades',
+    onDelete: 'CASCADE'
+  });
+  OportunidadesVenta.belongsTo(Cliente, { 
+    foreignKey: 'id_cliente',
+    as: 'cliente'
+  });
+
+  // Usuario -> OportunidadesVenta (1:N)
+  Usuario.hasMany(OportunidadesVenta, { 
+    foreignKey: 'id_usuario_asignado',
+    as: 'oportunidadesAsignadas',
+    onDelete: 'SET NULL'
+  });
+  OportunidadesVenta.belongsTo(Usuario, { 
+    foreignKey: 'id_usuario_asignado',
+    as: 'usuarioAsignado'
+  });
+
+  // Cliente -> TareasCRM (1:N)
+  Cliente.hasMany(TareasCRM, { 
+    foreignKey: 'id_cliente',
+    as: 'tareas',
+    onDelete: 'CASCADE'
+  });
+  TareasCRM.belongsTo(Cliente, { 
+    foreignKey: 'id_cliente',
+    as: 'cliente'
+  });
+
+  // OportunidadesVenta -> TareasCRM (1:N)
+  OportunidadesVenta.hasMany(TareasCRM, { 
+    foreignKey: 'id_oportunidad',
+    as: 'tareas',
+    onDelete: 'CASCADE'
+  });
+  TareasCRM.belongsTo(OportunidadesVenta, { 
+    foreignKey: 'id_oportunidad',
+    as: 'oportunidad'
+  });
+
+  // Usuario -> TareasCRM (1:N)
+  Usuario.hasMany(TareasCRM, { 
+    foreignKey: 'id_usuario_asignado',
+    as: 'tareasAsignadas',
+    onDelete: 'RESTRICT'
+  });
+  TareasCRM.belongsTo(Usuario, { 
+    foreignKey: 'id_usuario_asignado',
+    as: 'usuarioAsignado'
+  });
+
+  // Cliente <-> SegmentosCliente (M:N)
+  Cliente.belongsToMany(SegmentosCliente, {
+    through: ClienteSegmentos,
+    foreignKey: 'id_cliente',
+    otherKey: 'id_segmento',
+    as: 'segmentos'
+  });
+  SegmentosCliente.belongsToMany(Cliente, {
+    through: ClienteSegmentos,
+    foreignKey: 'id_segmento',
+    otherKey: 'id_cliente',
+    as: 'clientes'
+  });
+
+  // CampanasMarketing -> CampanaClientes (1:N)
+  CampanasMarketing.hasMany(CampanaClientes, { 
+    foreignKey: 'id_campana',
+    as: 'clientesCampana',
+    onDelete: 'CASCADE'
+  });
+  CampanaClientes.belongsTo(CampanasMarketing, { 
+    foreignKey: 'id_campana',
+    as: 'campana'
+  });
+
+  // Cliente -> CampanaClientes (1:N)
+  Cliente.hasMany(CampanaClientes, { 
+    foreignKey: 'id_cliente',
+    as: 'campanasCliente',
+    onDelete: 'CASCADE'
+  });
+  CampanaClientes.belongsTo(Cliente, { 
+    foreignKey: 'id_cliente',
+    as: 'cliente'
+  });
+
+  // ==========================================
+  // RELACIONES INVENTARIO
+  // ==========================================
+
+  // Almacenes -> Inventario (1:N)
+  Almacenes.hasMany(Inventario, { 
+    foreignKey: 'id_almacen',
+    as: 'inventarios',
+    onDelete: 'CASCADE'
+  });
+  Inventario.belongsTo(Almacenes, { 
+    foreignKey: 'id_almacen',
+    as: 'almacen'
+  });
+
+  // Producto -> Inventario (1:N)
+  Producto.hasMany(Inventario, { 
+    foreignKey: 'id_producto',
+    as: 'inventarios',
+    onDelete: 'CASCADE'
+  });
+  Inventario.belongsTo(Producto, { 
+    foreignKey: 'id_producto',
+    as: 'producto'
+  });
+
+  // Inventario -> MovimientosInventario (1:N)
+  Inventario.hasMany(MovimientosInventario, { 
+    foreignKey: 'id_inventario',
+    as: 'movimientos',
+    onDelete: 'CASCADE'
+  });
+  MovimientosInventario.belongsTo(Inventario, { 
+    foreignKey: 'id_inventario',
+    as: 'inventario'
+  });
+
+  // Usuario -> MovimientosInventario (1:N)
+  Usuario.hasMany(MovimientosInventario, { 
+    foreignKey: 'id_usuario',
+    as: 'movimientosInventario',
+    onDelete: 'RESTRICT'
+  });
+  MovimientosInventario.belongsTo(Usuario, { 
+    foreignKey: 'id_usuario',
+    as: 'usuario'
+  });
+
+  // Orden -> MovimientosInventario (1:N)
+  Orden.hasMany(MovimientosInventario, { 
+    foreignKey: 'id_orden',
+    as: 'movimientosInventario',
+    onDelete: 'SET NULL'
+  });
+  MovimientosInventario.belongsTo(Orden, { 
+    foreignKey: 'id_orden',
+    as: 'orden'
+  });
+
+  // Inventario -> AlertasInventario (1:N)
+  Inventario.hasMany(AlertasInventario, { 
+    foreignKey: 'id_inventario',
+    as: 'alertas',
+    onDelete: 'CASCADE'
+  });
+  AlertasInventario.belongsTo(Inventario, { 
+    foreignKey: 'id_inventario',
+    as: 'inventario'
+  });
+
+  // Proveedores -> OrdenesCompra (1:N)
+  Proveedores.hasMany(OrdenesCompra, { 
+    foreignKey: 'id_proveedor',
+    as: 'ordenesCompra',
+    onDelete: 'RESTRICT'
+  });
+  OrdenesCompra.belongsTo(Proveedores, { 
+    foreignKey: 'id_proveedor',
+    as: 'proveedor'
+  });
+
+  // Almacenes -> OrdenesCompra (1:N)
+  Almacenes.hasMany(OrdenesCompra, { 
+    foreignKey: 'id_almacen',
+    as: 'ordenesCompra',
+    onDelete: 'RESTRICT'
+  });
+  OrdenesCompra.belongsTo(Almacenes, { 
+    foreignKey: 'id_almacen',
+    as: 'almacen'
+  });
+
+  // Usuario -> OrdenesCompra (1:N)
+  Usuario.hasMany(OrdenesCompra, { 
+    foreignKey: 'id_usuario',
+    as: 'ordenesCompra',
+    onDelete: 'RESTRICT'
+  });
+  OrdenesCompra.belongsTo(Usuario, { 
+    foreignKey: 'id_usuario',
+    as: 'usuario'
+  });
+
+  // OrdenesCompra -> OrdenesCompraDetalle (1:N)
+  OrdenesCompra.hasMany(OrdenesCompraDetalle, { 
+    foreignKey: 'id_orden_compra',
+    as: 'detalles',
+    onDelete: 'CASCADE'
+  });
+  OrdenesCompraDetalle.belongsTo(OrdenesCompra, { 
+    foreignKey: 'id_orden_compra',
+    as: 'ordenCompra'
+  });
+
+  // Producto -> OrdenesCompraDetalle (1:N)
+  Producto.hasMany(OrdenesCompraDetalle, { 
+    foreignKey: 'id_producto',
+    as: 'enlaceOrdenes',
+    onDelete: 'RESTRICT'
+  });
+  OrdenesCompraDetalle.belongsTo(Producto, { 
+    foreignKey: 'id_producto',
+    as: 'producto'
+  });
 };
 
 // Ejecutar las asociaciones
@@ -172,6 +431,22 @@ export {
     Orden,
     OrdenItem,
     Payment,
+    // CRM Models
+    InteraccionesCliente,
+    OportunidadesVenta,
+    TareasCRM,
+    SegmentosCliente,
+    ClienteSegmentos,
+    CampanasMarketing,
+    CampanaClientes,
+    // Inventory Models
+    Almacenes,
+    Inventario,
+    MovimientosInventario,
+    Proveedores,
+    OrdenesCompra,
+    OrdenesCompraDetalle,
+    AlertasInventario,
     setupAssociations
 };
 
@@ -189,4 +464,20 @@ export default {
     Orden,
     OrdenItem,
     Payment,
+    // CRM Models
+    InteraccionesCliente,
+    OportunidadesVenta,
+    TareasCRM,
+    SegmentosCliente,
+    ClienteSegmentos,
+    CampanasMarketing,
+    CampanaClientes,
+    // Inventory Models
+    Almacenes,
+    Inventario,
+    MovimientosInventario,
+    Proveedores,
+    OrdenesCompra,
+    OrdenesCompraDetalle,
+    AlertasInventario,
 };
