@@ -71,6 +71,123 @@ router.get('/perfil', [verifyToken], clienteController.getMyProfile);
 
 /**
  * @swagger
+ * /api/clientes/perfil:
+ *   put:
+ *     summary: Actualiza el perfil propio del cliente autenticado
+ *     tags: [Clientes]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *               apellido:
+ *                 type: string
+ *               telefono:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Perfil actualizado exitosamente
+ *       400:
+ *         description: Error al actualizar el perfil
+ *       404:
+ *         description: Perfil no encontrado
+ */
+router.put('/perfil', [verifyToken], clienteController.updateMyProfile);
+
+/**
+ * @swagger
+ * /api/clientes/perfil:
+ *   delete:
+ *     summary: Elimina el perfil propio del cliente autenticado
+ *     tags: [Clientes]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil eliminado exitosamente
+ *       404:
+ *         description: Perfil no encontrado
+ */
+router.delete('/perfil', [verifyToken], clienteController.deleteMyProfile);
+
+/**
+ * @swagger
+ * /api/clientes/buscar:
+ *   get:
+ *     summary: Busca clientes por criterios específicos (Solo Administradores)
+ *     tags: [Clientes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: nombre
+ *         schema:
+ *           type: string
+ *         description: Buscar por nombre
+ *       - in: query
+ *         name: email
+ *         schema:
+ *           type: string
+ *         description: Buscar por email
+ *       - in: query
+ *         name: telefono
+ *         schema:
+ *           type: string
+ *         description: Buscar por teléfono
+ *     responses:
+ *       200:
+ *         description: Resultados de búsqueda
+ *       401:
+ *         description: No autorizado
+ *       403:
+ *         description: Acceso denegado (requiere permisos de administrador)
+ */
+router.get('/buscar', [verifyToken, isAdmin], clienteController.searchClientes);
+
+/**
+ * @swagger
+ * /api/clientes:
+ *   get:
+ *     summary: Obtiene todos los clientes con paginación y búsqueda (Solo Administradores)
+ *     tags: [Clientes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número de página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Límite de resultados por página
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Búsqueda por nombre, apellido o email
+ *     responses:
+ *       200:
+ *         description: Lista de clientes con paginación
+ *       401:
+ *         description: No autorizado
+ *       403:
+ *         description: Acceso denegado (requiere permisos de administrador)
+ */
+router.get('/', [verifyToken, isAdmin], clienteController.getAllClientes);
+
+/**
+ * @swagger
  * /api/clientes:
  *   post:
  *     summary: Crea un nuevo cliente

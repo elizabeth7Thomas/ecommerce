@@ -66,6 +66,62 @@ class ClienteController {
       res.status(err.statusCode || 500).json(err);
     }
   }
+
+  // ✅ Obtener todos los clientes (con paginación/filtros)
+  async getAllClientes(req, res) {
+    try {
+      const { page = 1, limit = 10, search } = req.query;
+      const clientes = await clienteService.getAllClientes({
+        page: parseInt(page),
+        limit: parseInt(limit),
+        search
+      });
+      res.status(200).json(response.success(clientes));
+    } catch (error) {
+      const err = response.handleError(error);
+      res.status(err.statusCode || 500).json(err);
+    }
+  }
+
+  // ✅ Actualizar perfil propio (sin necesidad de ID en params)
+  async updateMyProfile(req, res) {
+    try {
+      const { id_usuario } = req;
+      const cliente = await clienteService.updateClienteByUsuarioId(id_usuario, req.body);
+      res.status(200).json(response.success(cliente, 'Perfil actualizado exitosamente'));
+    } catch (error) {
+      const err = response.handleError(error);
+      res.status(err.statusCode || 400).json(err);
+    }
+  }
+
+  // ✅ Eliminar perfil propio
+  async deleteMyProfile(req, res) {
+    try {
+      const { id_usuario } = req;
+      const result = await clienteService.deleteClienteByUsuarioId(id_usuario);
+      res.status(200).json(response.noContent('Perfil eliminado exitosamente'));
+    } catch (error) {
+      const err = response.handleError(error);
+      res.status(err.statusCode || 500).json(err);
+    }
+  }
+
+  // ✅ Buscar clientes por criterios específicos
+  async searchClientes(req, res) {
+    try {
+      const { nombre, email, telefono } = req.query;
+      const clientes = await clienteService.searchClientes({
+        nombre,
+        email,
+        telefono
+      });
+      res.status(200).json(response.success(clientes));
+    } catch (error) {
+      const err = response.handleError(error);
+      res.status(err.statusCode || 500).json(err);
+    }
+  }
 }
 
 export default new ClienteController();
