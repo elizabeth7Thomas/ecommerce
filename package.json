@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "setup:roles": "node src/script/roles_default.js",
     "sync:db": "node sync-db.js",
-    "setup:db": "npm run sync:db && npm run setup:roles"
+    "setup:db": "npm run sync:db && npm run setup:roles",
+    "fix-sequences": "node scripts/fix-sequences.js"
   },
   "keywords": [
     "ecommerce",

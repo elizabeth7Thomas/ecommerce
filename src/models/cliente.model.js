@@ -10,6 +10,10 @@ const Cliente = sequelize.define('Cliente', {
     id_usuario: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        references: {
+            model: 'Usuarios', // Nombre de la tabla de usuarios
+            key: 'id_usuario'
+        }
     },
     nombre: {
         type: DataTypes.STRING(100),

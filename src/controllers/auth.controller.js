@@ -30,6 +30,12 @@ const authController = {
             let clienteData = null;
             if (newUser.id_rol === 2) {
                 try {
+                    // Verificar que el usuario fue guardado correctamente
+                    const userVerify = await userService.getUserById(newUser.id_usuario);
+                    if (!userVerify) {
+                        throw new Error('El usuario no se guardó correctamente en la base de datos');
+                    }
+                    
                     clienteData = await clienteService.createCliente({
                         id_usuario: newUser.id_usuario,
                         nombre: userData.nombre || '',
@@ -39,7 +45,11 @@ const authController = {
                 } catch (clienteError) {
                     // Si falla la creación del cliente, eliminar el usuario
                     console.error('Error al crear cliente, revertiendo usuario:', clienteError);
-                    await newUser.destroy();
+                    try {
+                        await newUser.destroy();
+                    } catch (destroyError) {
+                        console.error('Error al eliminar usuario fallido:', destroyError);
+                    }
                     throw new Error('Error al crear el perfil de cliente. Por favor intenta de nuevo.');
                 }
             }

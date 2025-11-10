@@ -1,4 +1,4 @@
-import Almacenes from '../models/Almacenes.js';
+import Almacenes from '../models/almacenes.model.js';
 import * as response from '../utils/response.js';
 
 class AlmacenesController {
