@@ -2,10 +2,28 @@ import usuarioService from '../services/usuario.service.js';
 import * as response from '../utils/response.js';
 
 class UsuarioController {
+    // Método auxiliar para formatear usuario
+    formatearUsuario(usuario) {
+        if (!usuario) return null;
+        
+        const usuarioObj = usuario.toJSON ? usuario.toJSON() : usuario;
+        
+        return {
+            id_usuario: usuarioObj.id_usuario,
+            nombre_usuario: usuarioObj.nombre_usuario,
+            correo_electronico: usuarioObj.correo_electronico,
+            id_rol: usuarioObj.id_rol,
+            activo: usuarioObj.activo,
+            fecha_creacion: usuarioObj.fecha_creacion,
+            ...(usuarioObj.rol && { rol: usuarioObj.rol })
+        };
+    }
+
     async getAllUsuarios(req, res) {
         try {
             const usuarios = await usuarioService.getAllUsuarios();
-            res.status(200).json(response.success(usuarios));
+            const usuariosFormateados = usuarios.map(u => this.formatearUsuario(u));
+            res.status(200).json(response.success(usuariosFormateados));
         } catch (error) {
             const err = response.handleError(error);
             res.status(err.statusCode || 500).json(err);
@@ -19,7 +37,8 @@ class UsuarioController {
             if (!usuario) {
                 return res.status(404).json(response.notFound('Usuario no encontrado'));
             }
-            res.status(200).json(response.success(usuario));
+            const usuarioFormateado = this.formatearUsuario(usuario);
+            res.status(200).json(response.success(usuarioFormateado));
         } catch (error) {
             const err = response.handleError(error);
             res.status(err.statusCode || 500).json(err);
@@ -29,7 +48,8 @@ class UsuarioController {
     async createUsuario(req, res) {
         try {
             const nuevoUsuario = await usuarioService.createUsuario(req.body);
-            res.status(201).json(response.created(nuevoUsuario, 'Usuario creado exitosamente'));
+            const usuarioFormateado = this.formatearUsuario(nuevoUsuario);
+            res.status(201).json(response.created(usuarioFormateado, 'Usuario creado exitosamente'));
         } catch (error) {
             const err = response.handleError(error);
             res.status(err.statusCode || 400).json(err);
@@ -40,7 +60,8 @@ class UsuarioController {
         try {
             const { id } = req.params;
             const usuarioActualizado = await usuarioService.updateUsuario(id, req.body);
-            res.status(200).json(response.success(usuarioActualizado, 'Usuario actualizado exitosamente'));
+            const usuarioFormateado = this.formatearUsuario(usuarioActualizado);
+            res.status(200).json(response.success(usuarioFormateado, 'Usuario actualizado exitosamente'));
         } catch (error) {
             const err = response.handleError(error);
             res.status(err.statusCode || 500).json(err);
