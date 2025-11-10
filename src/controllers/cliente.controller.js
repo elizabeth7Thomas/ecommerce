@@ -2,15 +2,38 @@ import clienteService from '../services/cliente.service.js';
 import * as response from '../utils/response.js';
 
 class ClienteController {
+  // ✅ CREAR CLIENTE - Usuario registrándose a sí mismo
   async createCliente(req, res) {
     try {
-      const { id_usuario } = req; // ← Del token JWT (middleware verifyToken)
+      const { id_usuario } = req; // Del token JWT
       const clienteData = {
         ...req.body,
-        id_usuario // ← Se asigna automáticamente
+        id_usuario // Se asigna automáticamente
       };
       const cliente = await clienteService.createCliente(clienteData);
       res.status(201).json(response.created(cliente, 'Cliente creado exitosamente'));
+    } catch (error) {
+      const err = response.handleError(error);
+      res.status(err.statusCode || 400).json(err);
+    }
+  }
+
+  // ✅ CREAR CLIENTE POR ADMIN - Admin crea cliente para un usuario existente
+  async createClienteByAdmin(req, res) {
+    try {
+      const { id_usuario } = req.body; // Admin especifica qué usuario será cliente
+      
+      if (!id_usuario) {
+        return res.status(400).json(response.badRequest('El id_usuario es requerido'));
+      }
+
+      const clienteData = {
+        ...req.body,
+        id_usuario
+      };
+      
+      const cliente = await clienteService.createCliente(clienteData);
+      res.status(201).json(response.created(cliente, 'Cliente creado por admin exitosamente'));
     } catch (error) {
       const err = response.handleError(error);
       res.status(err.statusCode || 400).json(err);

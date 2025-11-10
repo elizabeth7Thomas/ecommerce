@@ -1,119 +1,21 @@
-import { Router } from 'express';
-import usuarioController from '../controllers/usuario.controller.js';
+import express from 'express';
+import UsuarioController from '../controllers/usuario.controller.js';
 import { verifyToken, isAdmin } from '../middlewares/auth.middleware.js';
 
-const router = Router();
-
-/**
- * @swagger
- * components:
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- *   schemas:
- *     Usuario:
- *       type: object
- *       properties:
- *         id_usuario:
- *           type: integer
- *           description: El ID autogenerado del usuario.
- *         nombre_usuario:
- *           type: string
- *           description: El nombre de usuario único.
- *         correo_electronico:
- *           type: string
- *           format: email
- *           description: El correo electrónico único del usuario.
- *         rol:
- *           type: string
- *           enum: [cliente, administrador]
- *           description: El rol del usuario.
- *         activo:
- *           type: boolean
- *           description: Indica si el usuario está activo.
- *         fecha_creacion:
- *           type: string
- *           format: date-time
- *           description: La fecha de creación del usuario.
- *         fecha_actualizacion:
- *           type: string
- *           format: date-time
- *           description: La última fecha de actualización del usuario.
- *       example:
- *         id_usuario: 1
- *         nombre_usuario: "admin_user"
- *         correo_electronico: "admin@example.com"
- *         rol: "administrador"
- *         activo: true
- *         fecha_creacion: "2023-10-27T10:00:00.000Z"
- *         fecha_actualizacion: "2023-10-27T10:00:00.000Z"
- */
+const router = express.Router();
 
 /**
  * @swagger
  * tags:
  *   name: Usuarios
- *   description: API para la gestión de usuarios (Requiere rol de Administrador)
+ *   description: API para la gestión de usuarios
  */
-
-/**
- * @swagger
- * /api/usuarios:
- *   get:
- *     summary: Retorna la lista de todos los usuarios
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: La lista de usuarios.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Usuario'
- *       403:
- *         description: Acceso denegado.
- */
-router.get('/usuarios', [verifyToken, isAdmin], usuarioController.getAllUsuarios);
-
-/**
- * @swagger
- * /api/usuarios/{id}:
- *   get:
- *     summary: Obtiene un usuario por su ID
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: El ID del usuario.
- *     responses:
- *       200:
- *         description: Detalles del usuario.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Usuario'
- *       404:
- *         description: Usuario no encontrado.
- *       403:
- *         description: Acceso denegado.
- */
-router.get('/usuarios/:id', [verifyToken, isAdmin], usuarioController.getUsuarioById);
 
 /**
  * @swagger
  * /api/usuarios:
  *   post:
- *     summary: Crea un nuevo usuario
+ *     summary: Crear nuevo usuario
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -123,40 +25,126 @@ router.get('/usuarios/:id', [verifyToken, isAdmin], usuarioController.getUsuario
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - nombre_usuario
+ *               - correo_electronico
+ *               - contrasena
  *             properties:
  *               nombre_usuario:
  *                 type: string
  *               correo_electronico:
  *                 type: string
+ *                 format: email
  *               contrasena:
  *                 type: string
- *               rol:
- *                 type: string
+ *                 minLength: 6
+ *               id_rol:
+ *                 type: integer
  *     responses:
  *       201:
- *         description: Usuario creado exitosamente.
- *       409:
- *         description: Conflicto, el usuario o correo ya existe.
- *       403:
- *         description: Acceso denegado.
+ *         description: Usuario creado exitosamente
+ *       400:
+ *         description: Error de validación
+ *       401:
+ *         description: No autorizado
  */
-router.post('/usuarios', [verifyToken, isAdmin], usuarioController.createUsuario);
+router.post('/', [verifyToken, isAdmin], UsuarioController.createUsuario);
+
+/**
+ * @swagger
+ * /api/usuarios:
+ *   get:
+ *     summary: Obtener todos los usuarios
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *       - in: query
+ *         name: activo
+ *         schema:
+ *           type: boolean
+ *           default: true
+ *     responses:
+ *       200:
+ *         description: Lista de usuarios
+ *       401:
+ *         description: No autorizado
+ */
+router.get('/', [verifyToken, isAdmin], UsuarioController.getAllUsuarios);
+
+/**
+ * @swagger
+ * /api/usuarios/{id}:
+ *   get:
+ *     summary: Obtener usuario por ID
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Usuario obtenido
+ *       404:
+ *         description: Usuario no encontrado
+ *       401:
+ *         description: No autorizado
+ */
+router.get('/:id', [verifyToken], UsuarioController.getUsuarioById);
+
+/**
+ * @swagger
+ * /api/usuarios/email/{email}:
+ *   get:
+ *     summary: Obtener usuario por email
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: email
+ *     responses:
+ *       200:
+ *         description: Usuario obtenido
+ *       404:
+ *         description: Usuario no encontrado
+ *       401:
+ *         description: No autorizado
+ */
+router.get('/email/:email', [verifyToken], UsuarioController.getUsuarioByEmail);
 
 /**
  * @swagger
  * /api/usuarios/{id}:
  *   put:
- *     summary: Actualiza un usuario existente
+ *     summary: Actualizar usuario
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: integer
- *         required: true
- *         description: El ID del usuario a actualizar.
  *     requestBody:
  *       required: true
  *       content:
@@ -168,43 +156,127 @@ router.post('/usuarios', [verifyToken, isAdmin], usuarioController.createUsuario
  *                 type: string
  *               correo_electronico:
  *                 type: string
- *               rol:
- *                 type: string
- *               activo:
- *                 type: boolean
+ *               id_rol:
+ *                 type: integer
  *     responses:
  *       200:
- *         description: Usuario actualizado exitosamente.
+ *         description: Usuario actualizado
  *       404:
- *         description: Usuario no encontrado.
- *       403:
- *         description: Acceso denegado.
+ *         description: Usuario no encontrado
+ *       401:
+ *         description: No autorizado
  */
-router.put('/usuarios/:id', [verifyToken, isAdmin], usuarioController.updateUsuario);
+router.put('/:id', [verifyToken], UsuarioController.updateUsuario);
 
 /**
  * @swagger
- * /api/usuarios/{id}:
- *   delete:
- *     summary: Desactiva un usuario (eliminación lógica)
+ * /api/usuarios/{id}/cambiar-contraseña:
+ *   patch:
+ *     summary: Cambiar contraseña
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: integer
- *         required: true
- *         description: El ID del usuario a desactivar.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - passwordActual
+ *               - passwordNueva
+ *             properties:
+ *               passwordActual:
+ *                 type: string
+ *               passwordNueva:
+ *                 type: string
+ *                 minLength: 6
  *     responses:
  *       200:
- *         description: Usuario desactivado exitosamente.
- *       404:
- *         description: Usuario no encontrado.
- *       403:
- *         description: Acceso denegado.
+ *         description: Contraseña actualizada
+ *       400:
+ *         description: Error de validación
+ *       401:
+ *         description: No autorizado
  */
-router.delete('/usuarios/:id', [verifyToken, isAdmin], usuarioController.deleteUsuario);
+router.patch('/:id/cambiar-contraseña', [verifyToken], UsuarioController.changePassword);
+
+/**
+ * @swagger
+ * /api/usuarios/{id}/desactivar:
+ *   patch:
+ *     summary: Desactivar usuario
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Usuario desactivado
+ *       404:
+ *         description: Usuario no encontrado
+ *       401:
+ *         description: No autorizado
+ */
+router.patch('/:id/desactivar', [verifyToken, isAdmin], UsuarioController.disableUsuario);
+
+/**
+ * @swagger
+ * /api/usuarios/{id}/activar:
+ *   patch:
+ *     summary: Activar usuario
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Usuario activado
+ *       404:
+ *         description: Usuario no encontrado
+ *       401:
+ *         description: No autorizado
+ */
+router.patch('/:id/activar', [verifyToken, isAdmin], UsuarioController.enableUsuario);
+
+/**
+ * @swagger
+ * /api/usuarios/{id}:
+ *   delete:
+ *     summary: Eliminar usuario (eliminación física)
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       204:
+ *         description: Usuario eliminado
+ *       404:
+ *         description: Usuario no encontrado
+ *       401:
+ *         description: No autorizado
+ */
+router.delete('/:id', [verifyToken, isAdmin], UsuarioController.deleteUsuario);
 
 export default router;

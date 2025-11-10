@@ -1,4 +1,4 @@
-import CampanasMarketing from '../models/CampanasMarketing.js';
+import CampanasMarketing from '../models/CampanasMarketing.model.js';
 
 class CampanasMarketingService {
   // CREATE - Crear nueva campaña

@@ -1,83 +1,156 @@
-import usuarioService from '../services/usuario.service.js';
-import * as response from '../utils/response.js';
+import UserService from '../services/user.service.js';
+import response from '../utils/response.js';
 
 class UsuarioController {
-    // Método auxiliar para formatear usuario
-    formatearUsuario(usuario) {
-        if (!usuario) return null;
-        
-        const usuarioObj = usuario.toJSON ? usuario.toJSON() : usuario;
-        
-        return {
-            id_usuario: usuarioObj.id_usuario,
-            nombre_usuario: usuarioObj.nombre_usuario,
-            correo_electronico: usuarioObj.correo_electronico,
-            id_rol: usuarioObj.id_rol,
-            activo: usuarioObj.activo,
-            fecha_creacion: usuarioObj.fecha_creacion,
-            ...(usuarioObj.rol && { rol: usuarioObj.rol })
-        };
-    }
+  // CREATE
+  async createUsuario(req, res) {
+    try {
+      const { nombre_usuario, correo_electronico, contrasena, id_rol } = req.body;
 
-    async getAllUsuarios(req, res) {
-        try {
-            const usuarios = await usuarioService.getAllUsuarios();
-            const usuariosFormateados = usuarios.map(u => this.formatearUsuario(u));
-            res.status(200).json(response.success(usuariosFormateados));
-        } catch (error) {
-            const err = response.handleError(error);
-            res.status(err.statusCode || 500).json(err);
-        }
-    }
+      if (!nombre_usuario || !correo_electronico || !contrasena) {
+        return response.badRequest(res, 'Nombre de usuario, email y contraseña son requeridos');
+      }
 
-    async getUsuarioById(req, res) {
-        try {
-            const { id } = req.params;
-            const usuario = await usuarioService.getUsuarioById(id);
-            if (!usuario) {
-                return res.status(404).json(response.notFound('Usuario no encontrado'));
-            }
-            const usuarioFormateado = this.formatearUsuario(usuario);
-            res.status(200).json(response.success(usuarioFormateado));
-        } catch (error) {
-            const err = response.handleError(error);
-            res.status(err.statusCode || 500).json(err);
-        }
-    }
+      const usuario = await UserService.createUser({
+        nombre_usuario,
+        correo_electronico,
+        contrasena,
+        id_rol
+      });
 
-    async createUsuario(req, res) {
-        try {
-            const nuevoUsuario = await usuarioService.createUsuario(req.body);
-            const usuarioFormateado = this.formatearUsuario(nuevoUsuario);
-            res.status(201).json(response.created(usuarioFormateado, 'Usuario creado exitosamente'));
-        } catch (error) {
-            const err = response.handleError(error);
-            res.status(err.statusCode || 400).json(err);
-        }
+      return response.created(res, usuario);
+    } catch (error) {
+      return response.handleError(res, error);
     }
+  }
 
-    async updateUsuario(req, res) {
-        try {
-            const { id } = req.params;
-            const usuarioActualizado = await usuarioService.updateUsuario(id, req.body);
-            const usuarioFormateado = this.formatearUsuario(usuarioActualizado);
-            res.status(200).json(response.success(usuarioFormateado, 'Usuario actualizado exitosamente'));
-        } catch (error) {
-            const err = response.handleError(error);
-            res.status(err.statusCode || 500).json(err);
-        }
-    }
+  // READ - Todos los usuarios
+  async getAllUsuarios(req, res) {
+    try {
+      const { page, limit, activo } = req.query;
 
-    async deleteUsuario(req, res) {
-        try {
-            const { id } = req.params;
-            await usuarioService.deleteUsuario(id);
-            res.status(200).json(response.noContent('Usuario desactivado exitosamente'));
-        } catch (error) {
-            const err = response.handleError(error);
-            res.status(err.statusCode || 500).json(err);
-        }
+      const usuarios = await UserService.getAllUsers({
+        page: page ? parseInt(page) : 1,
+        limit: limit ? parseInt(limit) : 50,
+        activo: activo !== 'false' // Por defecto true
+      });
+
+      return response.success(res, usuarios);
+    } catch (error) {
+      return response.handleError(res, error);
     }
+  }
+
+  // READ - Por ID
+  async getUsuarioById(req, res) {
+    try {
+      const { id } = req.params;
+
+      const usuario = await UserService.getUserById(id);
+      if (!usuario) {
+        return response.notFound(res, 'Usuario no encontrado');
+      }
+
+      return response.success(res, usuario);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // READ - Por email
+  async getUsuarioByEmail(req, res) {
+    try {
+      const { email } = req.params;
+
+      const usuario = await UserService.getUserByEmail(email);
+      if (!usuario) {
+        return response.notFound(res, 'Usuario no encontrado');
+      }
+
+      return response.success(res, usuario);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // UPDATE
+  async updateUsuario(req, res) {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+
+      // Evitar actualización de ciertos campos sensibles
+      delete updateData.contrasena; // La contraseña se cambia con otro endpoint
+      delete updateData.id_usuario;
+
+      const usuario = await UserService.updateUser(id, updateData);
+      return response.success(res, usuario);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // UPDATE - Cambiar contraseña
+  async changePassword(req, res) {
+    try {
+      const { id } = req.params;
+      const { passwordActual, passwordNueva } = req.body;
+
+      if (!passwordActual || !passwordNueva) {
+        return response.badRequest(res, 'Contraseña actual y nueva son requeridas');
+      }
+
+      if (passwordNueva.length < 6) {
+        return response.badRequest(res, 'La nueva contraseña debe tener al menos 6 caracteres');
+      }
+
+      const result = await UserService.changePassword(id, passwordActual, passwordNueva);
+      return response.success(res, result);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // UPDATE - Desactivar usuario
+  async disableUsuario(req, res) {
+    try {
+      const { id } = req.params;
+
+      const usuario = await UserService.disableUser(id);
+      return response.success(res, usuario);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // UPDATE - Activar usuario
+  async enableUsuario(req, res) {
+    try {
+      const { id } = req.params;
+
+      const usuario = await UserService.enableUser(id);
+      return response.success(res, usuario);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // DELETE - Eliminación física (requiere admin)
+  async deleteUsuario(req, res) {
+    try {
+      const { id } = req.params;
+
+      const usuario = await UserService.getUserById(id);
+      if (!usuario) {
+        return response.notFound(res, 'Usuario no encontrado');
+      }
+
+      await usuario.destroy();
+      return response.noContent(res);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
 }
 
 export default new UsuarioController();

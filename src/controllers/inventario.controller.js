@@ -1,329 +1,320 @@
-import Inventario from '../models/inventario.model.js';
-import * as response from '../utils/response.js';
-import { Op, sequelize } from 'sequelize';
+import InventarioService from '../services/inventario.service.js';
+import response from '../utils/response.js';
 
 class InventarioController {
-  // Crear un nuevo registro de inventario
-  async create(req, res) {
+  // CREATE
+  async createInventario(req, res) {
     try {
-      const { 
-        id_producto, 
-        id_almacen, 
-        cantidad_actual, 
-        cantidad_minima, 
-        cantidad_maxima, 
-        ubicacion_fisica 
-      } = req.body;
+      const { id_producto, id_almacen, cantidad_actual, cantidad_minima, cantidad_maxima } = req.body;
 
-      // Validación básica
-      if (!id_producto || !id_almacen) {
-        return response.error(req, res, 'El producto y almacén son requeridos', 400);
+      if (!id_producto || !id_almacen || cantidad_actual === undefined || !cantidad_minima || !cantidad_maxima) {
+        return response.badRequest(res, 'Todos los campos son requeridos');
       }
 
-      // Verificar si ya existe inventario para este producto en este almacén
-      const inventarioExistente = await Inventario.findOne({ 
-        where: { 
-          id_producto, 
-          id_almacen 
-        } 
-      });
-
-      if (inventarioExistente) {
-        return response.error(
-          req, 
-          res, 
-          'Ya existe un registro de inventario para este producto en este almacén', 
-          409
-        );
-      }
-
-      // Validar cantidades
-      if (cantidad_minima && cantidad_maxima && cantidad_minima > cantidad_maxima) {
-        return response.error(
-          req, 
-          res, 
-          'La cantidad mínima no puede ser mayor que la cantidad máxima', 
-          400
-        );
-      }
-
-      // Crear el inventario
-      const nuevoInventario = await Inventario.create({
+      const inventario = await InventarioService.createInventario({
         id_producto,
         id_almacen,
-        cantidad_actual: cantidad_actual || 0,
-        cantidad_minima,
-        cantidad_maxima,
-        ubicacion_fisica
+        cantidad_actual: parseInt(cantidad_actual),
+        cantidad_minima: parseInt(cantidad_minima),
+        cantidad_maxima: parseInt(cantidad_maxima)
       });
 
-      return response.success(
-        req, 
-        res, 
-        nuevoInventario, 
-        'Inventario creado exitosamente', 
-        201
-      );
+      return response.created(res, inventario);
     } catch (error) {
-      console.error('Error al crear inventario:', error);
-      return response.error(req, res, 'Error al crear el inventario', 500);
+      return response.handleError(res, error);
     }
   }
 
-  // Obtener todos los registros de inventario
-  async getAll(req, res) {
+  // READ
+  async getInventarioById(req, res) {
     try {
-      const { id_almacen, id_producto, bajo_stock } = req.query;
+      const { idInventario } = req.params;
 
-      // Construir filtros opcionales
-      const where = {};
-      
-      if (id_almacen) {
-        where.id_almacen = id_almacen;
-      }
-      
-      if (id_producto) {
-        where.id_producto = id_producto;
-      }
-
-      // Filtrar productos con stock bajo (cantidad_actual <= cantidad_minima)
-      if (bajo_stock === 'true') {
-        where.cantidad_actual = {
-          [Op.lte]: sequelize.col('cantidad_minima')
-        };
-      }
-
-      const inventarios = await Inventario.findAll({ 
-        where,
-        order: [['fecha_actualizacion', 'DESC']]
-      });
-
-      return response.success(
-        req, 
-        res, 
-        inventarios, 
-        'Inventarios obtenidos exitosamente', 
-        200
-      );
+      const inventario = await InventarioService.getInventarioById(idInventario);
+      return response.success(res, inventario);
     } catch (error) {
-      console.error('Error al obtener inventarios:', error);
-      return response.error(req, res, 'Error al obtener los inventarios', 500);
+      return response.handleError(res, error);
     }
   }
 
-  // Obtener un inventario por ID
-  async getById(req, res) {
+  // READ
+  async getInventarioByProductoAlmacen(req, res) {
     try {
-      const { id } = req.params;
+      const { idProducto, idAlmacen } = req.params;
 
-      const inventario = await Inventario.findByPk(id);
-
-      if (!inventario) {
-        return response.error(req, res, 'Inventario no encontrado', 404);
-      }
-
-      return response.success(
-        req, 
-        res, 
-        inventario, 
-        'Inventario obtenido exitosamente', 
-        200
-      );
+      const inventario = await InventarioService.getInventarioByProductoAlmacen(idProducto, idAlmacen);
+      return response.success(res, inventario);
     } catch (error) {
-      console.error('Error al obtener inventario:', error);
-      return response.error(req, res, 'Error al obtener el inventario', 500);
+      return response.handleError(res, error);
     }
   }
 
-  // Obtener inventario por producto y almacén
-  async getByProductoAlmacen(req, res) {
+  // READ
+  async getAllInventario(req, res) {
     try {
-      const { id_producto, id_almacen } = req.params;
-
-      const inventario = await Inventario.findOne({
-        where: { id_producto, id_almacen }
-      });
-
-      if (!inventario) {
-        return response.error(req, res, 'Inventario no encontrado', 404);
-      }
-
-      return response.success(
-        req, 
-        res, 
-        inventario, 
-        'Inventario obtenido exitosamente', 
-        200
-      );
-    } catch (error) {
-      console.error('Error al obtener inventario:', error);
-      return response.error(req, res, 'Error al obtener el inventario', 500);
-    }
-  }
-
-  // Actualizar un inventario
-  async update(req, res) {
-    try {
-      const { id } = req.params;
       const { 
-        cantidad_actual, 
-        cantidad_minima, 
-        cantidad_maxima, 
-        ubicacion_fisica 
-      } = req.body;
+        page, 
+        limit, 
+        id_producto, 
+        id_almacen,
+        stock_bajo,
+        stock_excedido,
+        orderBy,
+        order
+      } = req.query;
 
-      // Buscar el inventario
-      const inventario = await Inventario.findByPk(id);
-
-      if (!inventario) {
-        return response.error(req, res, 'Inventario no encontrado', 404);
-      }
-
-      // Validar que cantidad_actual no sea negativa
-      if (cantidad_actual !== undefined && cantidad_actual < 0) {
-        return response.error(req, res, 'La cantidad actual no puede ser negativa', 400);
-      }
-
-      // Validar cantidades mínima y máxima
-      const nuevaCantidadMin = cantidad_minima !== undefined ? cantidad_minima : inventario.cantidad_minima;
-      const nuevaCantidadMax = cantidad_maxima !== undefined ? cantidad_maxima : inventario.cantidad_maxima;
-
-      if (nuevaCantidadMin > nuevaCantidadMax) {
-        return response.error(
-          req, 
-          res, 
-          'La cantidad mínima no puede ser mayor que la cantidad máxima', 
-          400
-        );
-      }
-
-      // Actualizar campos
-      await inventario.update({
-        cantidad_actual: cantidad_actual !== undefined ? cantidad_actual : inventario.cantidad_actual,
-        cantidad_minima: cantidad_minima !== undefined ? cantidad_minima : inventario.cantidad_minima,
-        cantidad_maxima: cantidad_maxima !== undefined ? cantidad_maxima : inventario.cantidad_maxima,
-        ubicacion_fisica: ubicacion_fisica !== undefined ? ubicacion_fisica : inventario.ubicacion_fisica,
-        fecha_actualizacion: new Date()
+      const inventario = await InventarioService.getAllInventario({
+        page: page ? parseInt(page) : 1,
+        limit: limit ? parseInt(limit) : 50,
+        id_producto,
+        id_almacen,
+        stock_bajo: stock_bajo === 'true',
+        stock_excedido: stock_excedido === 'true',
+        orderBy: orderBy || 'fecha_actualizacion',
+        order: order || 'DESC'
       });
 
-      return response.success(
-        req, 
-        res, 
-        inventario, 
-        'Inventario actualizado exitosamente', 
-        200
-      );
+      return response.success(res, inventario);
     } catch (error) {
-      console.error('Error al actualizar inventario:', error);
-      return response.error(req, res, 'Error al actualizar el inventario', 500);
+      return response.handleError(res, error);
     }
   }
 
-  // Ajustar cantidad (incrementar o decrementar)
+  // READ
+  async getInventarioByProducto(req, res) {
+    try {
+      const { idProducto } = req.params;
+
+      const inventario = await InventarioService.getInventarioByProducto(idProducto);
+      return response.success(res, inventario);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // READ
+  async getInventarioByAlmacen(req, res) {
+    try {
+      const { idAlmacen } = req.params;
+      const { page, limit, stock_bajo } = req.query;
+
+      const inventario = await InventarioService.getInventarioByAlmacen(idAlmacen, {
+        page: page ? parseInt(page) : 1,
+        limit: limit ? parseInt(limit) : 50,
+        stock_bajo: stock_bajo === 'true'
+      });
+
+      return response.success(res, inventario);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // READ
+  async getStockTotalByProducto(req, res) {
+    try {
+      const { idProducto } = req.params;
+
+      const stock = await InventarioService.getStockTotalByProducto(idProducto);
+      return response.success(res, stock);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // UPDATE
+  async updateInventario(req, res) {
+    try {
+      const { idInventario } = req.params;
+      const updateData = req.body;
+
+      const inventario = await InventarioService.updateInventario(idInventario, updateData);
+      return response.success(res, inventario);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // UPDATE
+  async actualizarCantidad(req, res) {
+    try {
+      const { idInventario } = req.params;
+      const { cantidad_actual } = req.body;
+
+      if (cantidad_actual === undefined) {
+        return response.badRequest(res, 'El campo cantidad_actual es requerido');
+      }
+
+      const inventario = await InventarioService.actualizarCantidad(idInventario, parseInt(cantidad_actual));
+      return response.success(res, inventario);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // UPDATE
   async ajustarCantidad(req, res) {
     try {
-      const { id } = req.params;
-      const { cantidad, tipo } = req.body; // tipo: 'entrada' o 'salida'
+      const { idInventario } = req.params;
+      const { cantidad_ajuste } = req.body;
 
-      if (!cantidad || !tipo) {
-        return response.error(req, res, 'La cantidad y el tipo son requeridos', 400);
+      if (cantidad_ajuste === undefined) {
+        return response.badRequest(res, 'El campo cantidad_ajuste es requerido');
       }
 
-      if (tipo !== 'entrada' && tipo !== 'salida') {
-        return response.error(req, res, 'El tipo debe ser "entrada" o "salida"', 400);
-      }
-
-      const inventario = await Inventario.findByPk(id);
-
-      if (!inventario) {
-        return response.error(req, res, 'Inventario no encontrado', 404);
-      }
-
-      let nuevaCantidad;
-      if (tipo === 'entrada') {
-        nuevaCantidad = inventario.cantidad_actual + cantidad;
-      } else {
-        nuevaCantidad = inventario.cantidad_actual - cantidad;
-      }
-
-      if (nuevaCantidad < 0) {
-        return response.error(req, res, 'No hay suficiente stock disponible', 400);
-      }
-
-      await inventario.update({
-        cantidad_actual: nuevaCantidad,
-        fecha_actualizacion: new Date()
-      });
-
-      return response.success(
-        req, 
-        res, 
-        inventario, 
-        `${tipo === 'entrada' ? 'Entrada' : 'Salida'} registrada exitosamente`, 
-        200
-      );
+      const inventario = await InventarioService.ajustarCantidad(idInventario, parseInt(cantidad_ajuste));
+      return response.success(res, inventario);
     } catch (error) {
-      console.error('Error al ajustar cantidad:', error);
-      return response.error(req, res, 'Error al ajustar la cantidad', 500);
+      return response.handleError(res, error);
     }
   }
 
-  // Obtener productos con stock bajo
-  async getStockBajo(req, res) {
+  // UPDATE
+  async incrementarCantidad(req, res) {
     try {
-      const { id_almacen } = req.query;
+      const { idInventario } = req.params;
+      const { cantidad } = req.body;
 
-      const where = {
-        cantidad_actual: {
-          [Op.lte]: sequelize.col('cantidad_minima')
-        }
-      };
-
-      if (id_almacen) {
-        where.id_almacen = id_almacen;
+      if (!cantidad) {
+        return response.badRequest(res, 'El campo cantidad es requerido');
       }
 
-      const inventarios = await Inventario.findAll({ 
-        where,
-        order: [['cantidad_actual', 'ASC']]
-      });
-
-      return response.success(
-        req, 
-        res, 
-        inventarios, 
-        'Productos con stock bajo obtenidos exitosamente', 
-        200
-      );
+      const inventario = await InventarioService.incrementarCantidad(idInventario, parseInt(cantidad));
+      return response.success(res, inventario);
     } catch (error) {
-      console.error('Error al obtener stock bajo:', error);
-      return response.error(req, res, 'Error al obtener productos con stock bajo', 500);
+      return response.handleError(res, error);
     }
   }
 
-  // Eliminar un inventario
-  async delete(req, res) {
+  // UPDATE
+  async decrementarCantidad(req, res) {
     try {
-      const { id } = req.params;
+      const { idInventario } = req.params;
+      const { cantidad } = req.body;
 
-      const inventario = await Inventario.findByPk(id);
-
-      if (!inventario) {
-        return response.error(req, res, 'Inventario no encontrado', 404);
+      if (!cantidad) {
+        return response.badRequest(res, 'El campo cantidad es requerido');
       }
 
-      await inventario.destroy();
-      
-      return response.success(
-        req, 
-        res, 
-        null, 
-        'Inventario eliminado exitosamente', 
-        200
-      );
+      const inventario = await InventarioService.decrementarCantidad(idInventario, parseInt(cantidad));
+      return response.success(res, inventario);
     } catch (error) {
-      console.error('Error al eliminar inventario:', error);
-      return response.error(req, res, 'Error al eliminar el inventario', 500);
+      return response.handleError(res, error);
+    }
+  }
+
+  // UPDATE
+  async actualizarNivelesStock(req, res) {
+    try {
+      const { idInventario } = req.params;
+      const { cantidad_minima, cantidad_maxima } = req.body;
+
+      if (!cantidad_minima || !cantidad_maxima) {
+        return response.badRequest(res, 'Los campos cantidad_minima y cantidad_maxima son requeridos');
+      }
+
+      const inventario = await InventarioService.actualizarNivelesStock(
+        idInventario,
+        parseInt(cantidad_minima),
+        parseInt(cantidad_maxima)
+      );
+
+      return response.success(res, inventario);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // DELETE
+  async deleteInventario(req, res) {
+    try {
+      const { idInventario } = req.params;
+
+      const resultado = await InventarioService.deleteInventario(idInventario);
+      return response.noContent(res);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // DELETE
+  async deleteInventarioByProductoAlmacen(req, res) {
+    try {
+      const { idProducto, idAlmacen } = req.params;
+
+      await InventarioService.deleteInventarioByProductoAlmacen(idProducto, idAlmacen);
+      return response.noContent(res);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // ESTADÍSTICAS
+  async getProductosStockBajo(req, res) {
+    try {
+      const productos = await InventarioService.getProductosStockBajo();
+      return response.success(res, productos);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // ESTADÍSTICAS
+  async getProductosStockExcedido(req, res) {
+    try {
+      const productos = await InventarioService.getProductosStockExcedido();
+      return response.success(res, productos);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // ESTADÍSTICAS
+  async getResumenInventario(req, res) {
+    try {
+      const resumen = await InventarioService.getResumenInventario();
+      return response.success(res, resumen);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // VALIDACIÓN
+  async verificarStockSuficiente(req, res) {
+    try {
+      const { idProducto, idAlmacen, cantidad } = req.params;
+
+      const verificacion = await InventarioService.verificarStockSuficiente(
+        idProducto,
+        idAlmacen,
+        parseInt(cantidad)
+      );
+
+      return response.success(res, verificacion);
+    } catch (error) {
+      return response.handleError(res, error);
+    }
+  }
+
+  // TRANSFERENCIA
+  async transferirStock(req, res) {
+    try {
+      const { id_producto, id_almacen_origen, id_almacen_destino, cantidad } = req.body;
+
+      if (!id_producto || !id_almacen_origen || !id_almacen_destino || !cantidad) {
+        return response.badRequest(res, 'Todos los campos son requeridos');
+      }
+
+      const resultado = await InventarioService.transferirStock(
+        id_producto,
+        id_almacen_origen,
+        id_almacen_destino,
+        parseInt(cantidad)
+      );
+
+      return response.success(res, resultado);
+    } catch (error) {
+      return response.handleError(res, error);
     }
   }
 }

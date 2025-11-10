@@ -9,6 +9,7 @@ import direccionRoutes from './direccion.routes.js';
 import carritoRoutes from './carrito.routes.js';
 import ordenRoutes from './orden.routes.js';
 import { paymentRoutes } from './payment.routes.js';
+import campanasMarketingRoutes from './campanasMarketing.routes.js';
 
 const router = Router();
 
@@ -46,6 +47,8 @@ const router = Router();
  *     description: Gestión de órdenes de compra
  *   - name: Pagos
  *     description: Gestión de pagos de órdenes
+ *   - name: Campañas Marketing
+ *     description: Gestión de campañas de marketing y promociones
  */
 
 // Montar todas las rutas
@@ -59,5 +62,6 @@ router.use('/direcciones', direccionRoutes);
 router.use('/carrito', carritoRoutes);
 router.use('/ordenes', ordenRoutes);
 router.use('/pagos', paymentRoutes); // Ruta de nivel superior (si existe)
+router.use('/campanas-marketing', campanasMarketingRoutes);
 
 export default router;
