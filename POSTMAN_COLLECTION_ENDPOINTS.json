@@ -1,0 +1,173 @@
+{
+  "info": {
+    "name": "E-Commerce API Completa",
+    "description": "Colección de endpoints para la API de E-Commerce con módulos de inventario y CRM",
+    "version": "2.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Autenticación",
+      "item": [
+        {
+          "name": "POST /auth/register",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": {"raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"]},
+            "body": {"mode": "raw", "raw": "{\"nombre_usuario\": \"newuser\", \"correo_electronico\": \"user@example.com\", \"contrasena\": \"password123\"}"}
+          }
+        },
+        {
+          "name": "POST /auth/login",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": {"raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"]},
+            "body": {"mode": "raw", "raw": "{\"correo_electronico\": \"user@example.com\", \"contrasena\": \"password123\"}"}
+          }
+        },
+        {
+          "name": "GET /auth/profile",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {"raw": "{{baseUrl}}/auth/profile", "host": ["{{baseUrl}}"], "path": ["auth", "profile"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Roles",
+      "item": [
+        {"name": "GET /roles", "request": {"method": "GET", "url": {"raw": "{{baseUrl}}/roles", "host": ["{{baseUrl}}"], "path": ["roles"]}}},
+        {"name": "POST /roles", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/roles", "host": ["{{baseUrl}}"], "path": ["roles"]}, "body": {"mode": "raw", "raw": "{\"nombre_rol\": \"gerente\", \"descripcion\": \"Rol de gerente\"}"}}}
+      ]
+    },
+    {
+      "name": "03 - Clientes",
+      "item": [
+        {"name": "GET /clientes", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/clientes", "host": ["{{baseUrl}}"], "path": ["clientes"]}}},
+        {"name": "POST /clientes", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/clientes", "host": ["{{baseUrl}}"], "path": ["clientes"]}, "body": {"mode": "raw", "raw": "{\"nombre\": \"Juan\", \"apellido\": \"Pérez\", \"telefono\": \"+5021234567\"}"}}}
+      ]
+    },
+    {
+      "name": "04 - Productos",
+      "item": [
+        {"name": "GET /productos", "request": {"method": "GET", "url": {"raw": "{{baseUrl}}/productos", "host": ["{{baseUrl}}"], "path": ["productos"]}}},
+        {"name": "POST /productos", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/productos", "host": ["{{baseUrl}}"], "path": ["productos"]}, "body": {"mode": "raw", "raw": "{\"nombre_producto\": \"Laptop\", \"descripcion\": \"Laptop gamer\", \"precio\": 2999.99, \"stock\": 10, \"id_categoria\": 1}"}}}
+      ]
+    },
+    {
+      "name": "05 - Carrito",
+      "item": [
+        {"name": "GET /carrito", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/carrito", "host": ["{{baseUrl}}"], "path": ["carrito"]}}},
+        {"name": "POST /carrito", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/carrito", "host": ["{{baseUrl}}"], "path": ["carrito"]}, "body": {"mode": "raw", "raw": "{\"id_producto\": 1, \"cantidad\": 2}"}}}
+      ]
+    },
+    {
+      "name": "06 - Órdenes",
+      "item": [
+        {"name": "GET /ordenes", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/ordenes", "host": ["{{baseUrl}}"], "path": ["ordenes"]}}},
+        {"name": "POST /ordenes", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/ordenes", "host": ["{{baseUrl}}"], "path": ["ordenes"]}, "body": {"mode": "raw", "raw": "{\"id_direccion\": 1, \"notas_orden\": \"Entrega urgente\"}"}}}
+      ]
+    },
+    {
+      "name": "07 - Pagos",
+      "item": [
+        {"name": "GET /ordenes/1/pagos", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/ordenes/1/pagos", "host": ["{{baseUrl}}"], "path": ["ordenes", "1", "pagos"]}}},
+        {"name": "POST /ordenes/1/pagos", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/ordenes/1/pagos", "host": ["{{baseUrl}}"], "path": ["ordenes", "1", "pagos"]}, "body": {"mode": "raw", "raw": "{\"monto\": 2999.99, \"metodo_pago\": \"tarjeta_credito\"}"}}}
+      ]
+    },
+    {
+      "name": "08 - Almacenes (INVENTARIO)",
+      "item": [
+        {"name": "GET /almacenes", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/almacenes", "host": ["{{baseUrl}}"], "path": ["almacenes"]}}},
+        {"name": "POST /almacenes", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/almacenes", "host": ["{{baseUrl}}"], "path": ["almacenes"]}, "body": {"mode": "raw", "raw": "{\"nombre_almacen\": \"Almacén Central\", \"direccion\": \"Calle Principal 123\", \"responsable\": \"Carlos\"}"}}}
+      ]
+    },
+    {
+      "name": "09 - Inventario",
+      "item": [
+        {"name": "GET /inventario", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/inventario", "host": ["{{baseUrl}}"], "path": ["inventario"]}}},
+        {"name": "POST /inventario", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/inventario", "host": ["{{baseUrl}}"], "path": ["inventario"]}, "body": {"mode": "raw", "raw": "{\"id_producto\": 1, \"id_almacen\": 1, \"cantidad_actual\": 50, \"cantidad_minima\": 10}"}}}
+      ]
+    },
+    {
+      "name": "10 - Movimientos Inventario",
+      "item": [
+        {"name": "GET /movimientos-inventario", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/movimientos-inventario", "host": ["{{baseUrl}}"], "path": ["movimientos-inventario"]}}},
+        {"name": "POST /movimientos-inventario", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/movimientos-inventario", "host": ["{{baseUrl}}"], "path": ["movimientos-inventario"]}, "body": {"mode": "raw", "raw": "{\"id_inventario\": 1, \"tipo_movimiento\": \"entrada\", \"cantidad\": 20, \"motivo\": \"Reabastecimiento\"}"}}}
+      ]
+    },
+    {
+      "name": "11 - Proveedores",
+      "item": [
+        {"name": "GET /proveedores", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/proveedores", "host": ["{{baseUrl}}"], "path": ["proveedores"]}}},
+        {"name": "POST /proveedores", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/proveedores", "host": ["{{baseUrl}}"], "path": ["proveedores"]}, "body": {"mode": "raw", "raw": "{\"nombre_proveedor\": \"Tech Distributor\", \"contacto\": \"Juan López\", \"email\": \"info@techdist.com\", \"telefono\": \"+5021234567\"}"}}}
+      ]
+    },
+    {
+      "name": "12 - Órdenes de Compra",
+      "item": [
+        {"name": "GET /ordenes-compra", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/ordenes-compra", "host": ["{{baseUrl}}"], "path": ["ordenes-compra"]}}},
+        {"name": "POST /ordenes-compra", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/ordenes-compra", "host": ["{{baseUrl}}"], "path": ["ordenes-compra"]}, "body": {"mode": "raw", "raw": "{\"id_proveedor\": 1, \"id_almacen\": 1, \"items\": [{\"id_producto\": 1, \"cantidad_ordenada\": 100, \"precio_unitario\": 1500}]}"}}}
+      ]
+    },
+    {
+      "name": "13 - Alertas Inventario",
+      "item": [
+        {"name": "GET /alertas-inventario", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/alertas-inventario", "host": ["{{baseUrl}}"], "path": ["alertas-inventario"]}}},
+        {"name": "GET /alertas-inventario/resumen", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/alertas-inventario/resumen", "host": ["{{baseUrl}}"], "path": ["alertas-inventario", "resumen"]}}}
+      ]
+    },
+    {
+      "name": "14 - Interacciones CRM",
+      "item": [
+        {"name": "GET /interacciones", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/interacciones", "host": ["{{baseUrl}}"], "path": ["interacciones"]}}},
+        {"name": "POST /interacciones", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/interacciones", "host": ["{{baseUrl}}"], "path": ["interacciones"]}, "body": {"mode": "raw", "raw": "{\"id_cliente\": 1, \"tipo_interaccion\": \"llamada\", \"descripcion\": \"Seguimiento de pedido\"}"}}}
+      ]
+    },
+    {
+      "name": "15 - Oportunidades Venta",
+      "item": [
+        {"name": "GET /oportunidades", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/oportunidades", "host": ["{{baseUrl}}"], "path": ["oportunidades"]}}},
+        {"name": "POST /oportunidades", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/oportunidades", "host": ["{{baseUrl}}"], "path": ["oportunidades"]}, "body": {"mode": "raw", "raw": "{\"id_cliente\": 1, \"titulo\": \"Venta grande\", \"valor_estimado\": 50000, \"probabilidad_cierre\": 75}"}}}
+      ]
+    },
+    {
+      "name": "16 - Tareas CRM",
+      "item": [
+        {"name": "GET /tareas", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/tareas", "host": ["{{baseUrl}}"], "path": ["tareas"]}}},
+        {"name": "POST /tareas", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/tareas", "host": ["{{baseUrl}}"], "path": ["tareas"]}, "body": {"mode": "raw", "raw": "{\"id_usuario_asignado\": 2, \"titulo\": \"Llamar al cliente\", \"tipo_tarea\": \"llamada\", \"prioridad\": \"alta\"}"}}},
+        {"name": "GET /tareas/pendientes", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/tareas/pendientes", "host": ["{{baseUrl}}"], "path": ["tareas", "pendientes"]}}}
+      ]
+    },
+    {
+      "name": "17 - Segmentos Clientes",
+      "item": [
+        {"name": "GET /segmentos", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/segmentos", "host": ["{{baseUrl}}"], "path": ["segmentos"]}}},
+        {"name": "POST /segmentos", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/segmentos", "host": ["{{baseUrl}}"], "path": ["segmentos"]}, "body": {"mode": "raw", "raw": "{\"nombre_segmento\": \"VIP\", \"descripcion\": \"Clientes con compras mayores a Q5000\"}"}}}
+      ]
+    },
+    {
+      "name": "18 - Campañas Marketing",
+      "item": [
+        {"name": "GET /campanas", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}], "url": {"raw": "{{baseUrl}}/campanas", "host": ["{{baseUrl}}"], "path": ["campanas"]}}},
+        {"name": "POST /campanas", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{token}}"}, {"key": "Content-Type", "value": "application/json"}], "url": {"raw": "{{baseUrl}}/campanas", "host": ["{{baseUrl}}"], "path": ["campanas"]}, "body": {"mode": "raw", "raw": "{\"nombre_campana\": \"Black Friday 2025\", \"tipo_campana\": \"email\", \"fecha_inicio\": \"2025-11-01\", \"fecha_fin\": \"2025-11-30\"}"}}}
+      ]
+    }
+  ]
+}

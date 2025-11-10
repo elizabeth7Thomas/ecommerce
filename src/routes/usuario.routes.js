@@ -84,30 +84,6 @@ router.get('/', [verifyToken, isAdmin], UsuarioController.getAllUsuarios);
 
 /**
  * @swagger
- * /api/usuarios/{id}:
- *   get:
- *     summary: Obtener usuario por ID
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Usuario obtenido
- *       404:
- *         description: Usuario no encontrado
- *       401:
- *         description: No autorizado
- */
-router.get('/:id', [verifyToken], UsuarioController.getUsuarioById);
-
-/**
- * @swagger
  * /api/usuarios/email/{email}:
  *   get:
  *     summary: Obtener usuario por email
@@ -130,6 +106,30 @@ router.get('/:id', [verifyToken], UsuarioController.getUsuarioById);
  *         description: No autorizado
  */
 router.get('/email/:email', [verifyToken], UsuarioController.getUsuarioByEmail);
+
+/**
+ * @swagger
+ * /api/usuarios/{id}:
+ *   get:
+ *     summary: Obtener usuario por ID
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Usuario obtenido
+ *       404:
+ *         description: Usuario no encontrado
+ *       401:
+ *         description: No autorizado
+ */
+router.get('/:id', [verifyToken], UsuarioController.getUsuarioById);
 
 /**
  * @swagger

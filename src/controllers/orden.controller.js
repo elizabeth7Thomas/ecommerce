@@ -81,6 +81,39 @@ class OrdenController {
             res.status(err.statusCode || 500).json(err);
         }
     }
+
+    async deleteOrder(req, res) {
+        try {
+            const { id } = req.params;
+            const { id_usuario, rol } = req;
+
+            // Validar que la orden exista
+            const orden = await ordenService.getOrderDetailsById(id);
+            if (!orden) {
+                return res.status(404).json(response.notFound('Orden no encontrada'));
+            }
+
+            // Autorización: El usuario es admin o es el dueño de la orden
+            if (rol !== 'administrador') {
+                const cliente = await Cliente.findOne({ where: { id_usuario } });
+                if (!cliente || orden.id_cliente !== cliente.id_cliente) {
+                    return res.status(403).json(response.forbidden('No eres el propietario de esta orden'));
+                }
+            }
+
+            // Solo se pueden eliminar órdenes en ciertos estados
+            const estadosEliminables = ['pendiente', 'cancelada'];
+            if (!estadosEliminables.includes(orden.estado_orden)) {
+                return res.status(400).json(response.badRequest(`No se puede eliminar una orden en estado ${orden.estado_orden}`));
+            }
+
+            await ordenService.deleteOrder(id);
+            res.status(200).json(response.success(null, 'Orden eliminada exitosamente'));
+        } catch (error) {
+            const err = response.handleError(error);
+            res.status(err.statusCode || 500).json(err);
+        }
+    }
 }
 
 export default new OrdenController();

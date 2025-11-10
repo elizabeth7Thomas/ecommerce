@@ -265,6 +265,42 @@ router.get('/:id', [verifyToken], ordenController.getOrderById);
  */
 router.put('/:id/status', [verifyToken, isAdmin], ordenController.updateOrderStatus);
 
+/**
+ * @swagger
+ * /api/ordenes/{id}:
+ *   delete:
+ *     summary: Elimina una orden (Solo el propietario o administradores)
+ *     tags: [Órdenes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema: { type: integer }
+ *         required: true
+ *         description: El ID de la orden a eliminar
+ *     responses:
+ *       200:
+ *         description: Orden eliminada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: No se puede eliminar una orden en este estado
+ *       403:
+ *         description: Acceso denegado (no es tu orden o no eres admin)
+ *       404:
+ *         description: Orden no encontrada
+ *       401:
+ *         description: No autorizado
+ */
+router.delete('/:id', [verifyToken], ordenController.deleteOrder);
 
 // Anidar rutas de pagos aquí
 router.use('/:id_orden/pagos', nestedPaymentRoutes);

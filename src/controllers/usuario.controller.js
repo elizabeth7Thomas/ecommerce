@@ -140,9 +140,23 @@ class UsuarioController {
     try {
       const { id } = req.params;
 
+      if (!id) {
+        return response.badRequest(res, 'El ID del usuario es requerido');
+      }
+
       const usuario = await UserService.getUserById(id);
       if (!usuario) {
         return response.notFound(res, 'Usuario no encontrado');
+      }
+
+      // Verificar que no sea el último administrador
+      if (usuario.rol && usuario.rol.nombre_rol === 'administrador') {
+        const adminCount = await Usuario.count({ 
+          where: { id_rol: usuario.id_rol, activo: true } 
+        });
+        if (adminCount <= 1) {
+          return response.badRequest(res, 'No se puede eliminar el último administrador del sistema');
+        }
       }
 
       await usuario.destroy();

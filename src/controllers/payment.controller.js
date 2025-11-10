@@ -87,6 +87,62 @@ class PaymentController {
             res.status(err.statusCode || 400).json(err);
         }
     }
+
+    async getAllPayments(req, res) {
+        try {
+            const { page = 1, limit = 10, estado_pago, id_orden, orderBy = 'fecha_pago', order = 'DESC' } = req.query;
+            const { rol } = req;
+
+            // Solo los admins pueden ver todos los pagos
+            if (rol !== 'administrador') {
+                return res.status(403).json(response.forbidden('Solo los administradores pueden ver todos los pagos'));
+            }
+
+            const opciones = {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                estado_pago: estado_pago || undefined,
+                id_orden: id_orden || undefined,
+                orderBy,
+                order
+            };
+
+            const payments = await paymentService.getAllPayments(opciones);
+            res.status(200).json(response.success(payments));
+        } catch (error) {
+            const err = response.handleError(error);
+            res.status(err.statusCode || 500).json(err);
+        }
+    }
+
+    async deletePayment(req, res) {
+        try {
+            const { id } = req.params;
+            const { rol } = req;
+
+            // Solo los admins pueden eliminar pagos
+            if (rol !== 'administrador') {
+                return res.status(403).json(response.forbidden('Solo los administradores pueden eliminar pagos'));
+            }
+
+            // Verificar que el pago exista
+            const payment = await paymentService.getPaymentById(id);
+            if (!payment) {
+                return res.status(404).json(response.notFound('Pago no encontrado'));
+            }
+
+            // Solo se pueden eliminar pagos pendientes
+            if (payment.estado_pago !== 'pendiente') {
+                return res.status(400).json(response.badRequest(`No se puede eliminar un pago en estado ${payment.estado_pago}`));
+            }
+
+            await paymentService.deletePayment(id);
+            res.status(200).json(response.success(null, 'Pago eliminado exitosamente'));
+        } catch (error) {
+            const err = response.handleError(error);
+            res.status(err.statusCode || 500).json(err);
+        }
+    }
 }
 
 export default new PaymentController();

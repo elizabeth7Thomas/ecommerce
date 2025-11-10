@@ -192,4 +192,87 @@ nestedRouter.post('/', [verifyToken], paymentController.createPayment);
  */
 router.put('/pagos/:id/status', [verifyToken, isAdmin], paymentController.updatePaymentStatus);
 
+/**
+ * @swagger
+ * /api/pagos:
+ *   get:
+ *     summary: Obtiene todos los pagos (Solo Administradores)
+ *     tags: [Pagos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *         description: Número de página
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *         description: Límite de registros por página
+ *       - in: query
+ *         name: estado_pago
+ *         schema: { type: string }
+ *         description: Filtrar por estado del pago
+ *       - in: query
+ *         name: id_orden
+ *         schema: { type: integer }
+ *         description: Filtrar por ID de orden
+ *     responses:
+ *       200:
+ *         description: Lista de todos los pagos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Payment'
+ *       401:
+ *         description: No autorizado
+ *       403:
+ *         description: Acceso denegado (requiere permisos de administrador)
+ */
+router.get('/', [verifyToken, isAdmin], paymentController.getAllPayments);
+
+/**
+ * @swagger
+ * /api/pagos/{id}:
+ *   delete:
+ *     summary: Elimina un pago (Solo Administradores)
+ *     tags: [Pagos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema: { type: integer }
+ *         required: true
+ *         description: El ID del pago a eliminar
+ *     responses:
+ *       200:
+ *         description: Pago eliminado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: No se puede eliminar un pago en este estado
+ *       401:
+ *         description: No autorizado
+ *       403:
+ *         description: Acceso denegado (requiere permisos de administrador)
+ *       404:
+ *         description: Pago no encontrado
+ */
+router.delete('/:id', [verifyToken, isAdmin], paymentController.deletePayment);
+
 export { router as paymentRoutes, nestedRouter as nestedPaymentRoutes };
