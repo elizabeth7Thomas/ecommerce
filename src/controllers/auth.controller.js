@@ -1,4 +1,5 @@
 import userService from '../services/user.service.js';
+import clienteService from '../services/cliente.service.js';
 import rolService from '../services/rol.service.js';
 import jwt from 'jsonwebtoken';
 import * as response from '../utils/response.js';
@@ -25,6 +26,24 @@ const authController = {
             
             const newUser = await userService.createUser(userData);
             
+            // Si es un cliente (id_rol: 2), crear el perfil de cliente automáticamente
+            let clienteData = null;
+            if (newUser.id_rol === 2) {
+                try {
+                    clienteData = await clienteService.createCliente({
+                        id_usuario: newUser.id_usuario,
+                        nombre: userData.nombre || '',
+                        apellido: userData.apellido || '',
+                        telefono: userData.telefono || null
+                    });
+                } catch (clienteError) {
+                    // Si falla la creación del cliente, eliminar el usuario
+                    console.error('Error al crear cliente, revertiendo usuario:', clienteError);
+                    await newUser.destroy();
+                    throw new Error('Error al crear el perfil de cliente. Por favor intenta de nuevo.');
+                }
+            }
+            
             // Obtener el rol completo
             const rol = await rolService.getRolById(newUser.id_rol);
 
@@ -45,10 +64,11 @@ const authController = {
                 correo_electronico: newUser.correo_electronico,
                 id_rol: newUser.id_rol,
                 nombre_rol: rol?.nombre_rol || 'cliente',
-                token
+                token,
+                cliente: clienteData || null
             };
 
-            res.status(201).json(response.created(responseData, 'Usuario registrado exitosamente'));
+            res.status(201).json(response.created(responseData, 'Usuario y cliente creados exitosamente'));
         } catch (error) {
             console.error('Error en register:', error);
             const err = response.handleError(error);
