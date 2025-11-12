@@ -10,26 +10,14 @@ const TareasCRM = sequelize.define('TareasCRM', {
     id_cliente: {
         type: DataTypes.INTEGER,
         allowNull: true,
-        references: {
-            model: 'Clientes',
-            key: 'id_cliente'
-        }
     },
     id_oportunidad: {
         type: DataTypes.INTEGER,
         allowNull: true,
-        references: {
-            model: 'Oportunidades_Venta',
-            key: 'id_oportunidad'
-        }
     },
     id_usuario_asignado: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: {
-            model: 'Usuarios',
-            key: 'id_usuario'
-        }
     },
     titulo: {
         type: DataTypes.STRING(255),
@@ -65,14 +53,11 @@ const TareasCRM = sequelize.define('TareasCRM', {
         type: DataTypes.TEXT,
         allowNull: true
     },
-    fecha_creacion: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-        allowNull: false
-    }
 }, {
     tableName: 'Tareas_CRM',
-    timestamps: false
+    timestamps: true,
+    createdAt: 'fecha_creacion',
+    updatedAt: 'fecha_actualizacion',
 });
 
 export default TareasCRM;

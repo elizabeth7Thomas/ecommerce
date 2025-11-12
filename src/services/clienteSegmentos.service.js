@@ -1,5 +1,7 @@
 import ClienteSegmentos from '../models/clienteSegmentos.model.js';
+import { Cliente, SegmentosCliente } from '../models/index.js';
 import sequelize from '../config/database.js';
+import { Op } from 'sequelize';
 
 class ClienteSegmentosService {
   // CREATE - Asignar segmento a cliente
@@ -338,24 +340,172 @@ class ClienteSegmentosService {
   }
 
   // UTILIDAD - Obtener clientes sin segmentos
-  async getClientesSinSegmentos() {
+  async getClientesSinSegmentos(options = {}) {
     try {
-      // Esta consulta necesitaría una subconsulta para encontrar clientes que no están en ClienteSegmentos
-      // Depende de tu estructura de base de datos
-      throw new Error('Método no implementado - requiere configuración de modelo Cliente');
+      const { page = 1, limit = 50 } = options;
+
+      // Obtener todos los IDs de clientes que tienen segmentos asignados
+      const clientesConSegmentos = await ClienteSegmentos.findAll({
+        attributes: ['id_cliente'],
+        raw: true,
+        group: ['id_cliente']
+      });
+
+      const idsClientesConSegmentos = clientesConSegmentos.map(cs => cs.id_cliente);
+
+      const offset = (page - 1) * limit;
+
+      // Obtener clientes que NO están en la lista de clientes con segmentos
+      const { count, rows } = await Cliente.findAndCountAll({
+        where: {
+          id_cliente: {
+            [Op.notIn]: idsClientesConSegmentos.length > 0 
+              ? idsClientesConSegmentos 
+              : [0] // Si no hay clientes con segmentos, usar 0 que no existe
+          }
+        },
+        include: [{ model: Usuario, as: 'usuario' }],
+        limit: parseInt(limit),
+        offset: offset,
+        order: [['id_cliente', 'DESC']]
+      });
+
+      return {
+        clientes: rows,
+        total: count,
+        pagina: parseInt(page),
+        totalPaginas: Math.ceil(count / limit),
+        mensaje: `${count} cliente(s) sin segmentos encontrado(s)`
+      };
     } catch (error) {
       throw new Error(`Error al obtener clientes sin segmentos: ${error.message}`);
     }
   }
 
   // UTILIDAD - Obtener segmentos sin clientes
-  async getSegmentosSinClientes() {
+  async getSegmentosSinClientes(options = {}) {
     try {
-      // Esta consulta necesitaría una subconsulta para encontrar segmentos que no están en ClienteSegmentos
-      // Depende de tu estructura de base de datos
-      throw new Error('Método no implementado - requiere configuración de modelo Segmento');
+      const { page = 1, limit = 50 } = options;
+
+      // Obtener todos los IDs de segmentos que tienen clientes asignados
+      const segmentosConClientes = await ClienteSegmentos.findAll({
+        attributes: ['id_segmento'],
+        raw: true,
+        group: ['id_segmento']
+      });
+
+      const idsSegmentosConClientes = segmentosConClientes.map(sc => sc.id_segmento);
+
+      const offset = (page - 1) * limit;
+
+      // Obtener segmentos que NO están en la lista de segmentos con clientes
+      const { count, rows } = await SegmentosCliente.findAndCountAll({
+        where: {
+          id_segmento: {
+            [Op.notIn]: idsSegmentosConClientes.length > 0 
+              ? idsSegmentosConClientes 
+              : [0] // Si no hay segmentos con clientes, usar 0 que no existe
+          }
+        },
+        limit: parseInt(limit),
+        offset: offset,
+        order: [['id_segmento', 'DESC']]
+      });
+
+      return {
+        segmentos: rows,
+        total: count,
+        pagina: parseInt(page),
+        totalPaginas: Math.ceil(count / limit),
+        mensaje: `${count} segmento(s) sin clientes encontrado(s)`
+      };
     } catch (error) {
       throw new Error(`Error al obtener segmentos sin clientes: ${error.message}`);
+    }
+  }
+
+  // UTILIDAD AVANZADA - Obtener clientes sin un segmento específico
+  async getClientesSinSegmentoEspecifico(idSegmento, options = {}) {
+    try {
+      const { page = 1, limit = 50 } = options;
+
+      // Obtener todos los IDs de clientes que tienen este segmento específico
+      const clientesConSegmento = await ClienteSegmentos.findAll({
+        attributes: ['id_cliente'],
+        where: { id_segmento: idSegmento },
+        raw: true
+      });
+
+      const idsClientesConSegmento = clientesConSegmento.map(cs => cs.id_cliente);
+
+      const offset = (page - 1) * limit;
+
+      // Obtener clientes que NO tienen este segmento
+      const { count, rows } = await Cliente.findAndCountAll({
+        where: {
+          id_cliente: {
+            [Op.notIn]: idsClientesConSegmento.length > 0 
+              ? idsClientesConSegmento 
+              : [0]
+          }
+        },
+        include: [{ model: Usuario, as: 'usuario' }],
+        limit: parseInt(limit),
+        offset: offset,
+        order: [['id_cliente', 'DESC']]
+      });
+
+      return {
+        clientes: rows,
+        total: count,
+        pagina: parseInt(page),
+        totalPaginas: Math.ceil(count / limit),
+        mensaje: `${count} cliente(s) sin el segmento especificado encontrado(s)`
+      };
+    } catch (error) {
+      throw new Error(`Error al obtener clientes sin segmento específico: ${error.message}`);
+    }
+  }
+
+  // UTILIDAD AVANZADA - Obtener segmentos sin un cliente específico
+  async getSegmentosSinClienteEspecifico(idCliente, options = {}) {
+    try {
+      const { page = 1, limit = 50 } = options;
+
+      // Obtener todos los IDs de segmentos que tiene este cliente específico
+      const segmentosDelCliente = await ClienteSegmentos.findAll({
+        attributes: ['id_segmento'],
+        where: { id_cliente: idCliente },
+        raw: true
+      });
+
+      const idsSegmentosDelCliente = segmentosDelCliente.map(sc => sc.id_segmento);
+
+      const offset = (page - 1) * limit;
+
+      // Obtener segmentos que NO tiene este cliente
+      const { count, rows } = await SegmentosCliente.findAndCountAll({
+        where: {
+          id_segmento: {
+            [Op.notIn]: idsSegmentosDelCliente.length > 0 
+              ? idsSegmentosDelCliente 
+              : [0]
+          }
+        },
+        limit: parseInt(limit),
+        offset: offset,
+        order: [['id_segmento', 'DESC']]
+      });
+
+      return {
+        segmentos: rows,
+        total: count,
+        pagina: parseInt(page),
+        totalPaginas: Math.ceil(count / limit),
+        mensaje: `${count} segmento(s) no asignado(s) al cliente encontrado(s)`
+      };
+    } catch (error) {
+      throw new Error(`Error al obtener segmentos sin cliente específico: ${error.message}`);
     }
   }
 }

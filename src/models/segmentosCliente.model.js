@@ -17,28 +17,20 @@ const SegmentosCliente = sequelize.define('SegmentosCliente', {
         allowNull: true
     },
     criterios: {
-        type: DataTypes.JSON,
-        allowNull: true,
-        defaultValue: {}
+        type: DataTypes.JSONB, // 1. Usar JSONB para coincidir con la BD
+        allowNull: true
     },
     activo: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
-        allowNull: false
     },
-    fecha_creacion: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-        allowNull: false
-    },
-    fecha_actualizacion: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-        allowNull: false
-    }
+    // No definimos las fechas aquí
 }, {
-    tableName: 'Segmentos_Cliente',
-    timestamps: false
+    tableName: 'segmentos_cliente',
+    // 2. Habilitar y mapear timestamps para que Sequelize los gestione
+    timestamps: true,
+    createdAt: 'fecha_creacion',
+    updatedAt: 'fecha_actualizacion'
 });
 
 export default SegmentosCliente;

@@ -33,6 +33,17 @@ import OrdenesCompra from './ordenesCompra.model.js';
 import OrdenesCompraDetalle from './ordenesCompraDetalle.model.js';
 import AlertasInventario from './alertasInventario.model.js';
 
+// Cotizaciones Models
+import Cotizaciones from './cotizaciones.model.js';
+import Cotizaciones_Items from './cotizacionesItems.model.js';
+import Cotizaciones_Ordenes from './cotizacionesOrdenes.model.js';
+
+// Devoluciones y Reembolsos Models
+import Devoluciones from './devoluciones.model.js';
+import Devoluciones_Items from './devolucionesItems.model.js';
+import Reembolsos from './reembolsos.model.js';
+import Politicas_Devolucion from './politicasDevolucion.model.js';
+
 // Associations con opciones mejoradas
 const setupAssociations = () => {
   // Rol -> Usuario (1:N)
@@ -517,6 +528,153 @@ const setupAssociations = () => {
     foreignKey: 'id_producto',
     as: 'producto'
   });
+
+  // ==================== COTIZACIONES ====================
+
+  // Cliente -> Cotizaciones (1:N)
+  Cliente.hasMany(Cotizaciones, { 
+    foreignKey: 'id_cliente',
+    as: 'cotizaciones',
+    onDelete: 'CASCADE'
+  });
+  Cotizaciones.belongsTo(Cliente, { 
+    foreignKey: 'id_cliente',
+    as: 'cliente'
+  });
+
+  // Usuario -> Cotizaciones (creador)
+  Usuario.hasMany(Cotizaciones, { 
+    foreignKey: 'id_usuario_creador',
+    as: 'cotizacionesCreadas',
+    onDelete: 'RESTRICT'
+  });
+  Cotizaciones.belongsTo(Usuario, { 
+    foreignKey: 'id_usuario_creador',
+    as: 'usuarioCreador'
+  });
+
+  // Cotizaciones -> Cotizaciones_Items (1:N)
+  Cotizaciones.hasMany(Cotizaciones_Items, { 
+    foreignKey: 'id_cotizacion',
+    as: 'items',
+    onDelete: 'CASCADE'
+  });
+  Cotizaciones_Items.belongsTo(Cotizaciones, { 
+    foreignKey: 'id_cotizacion',
+    as: 'cotizacion'
+  });
+
+  // Producto -> Cotizaciones_Items (1:N)
+  Producto.hasMany(Cotizaciones_Items, { 
+    foreignKey: 'id_producto',
+    as: 'itemsCotizacion',
+    onDelete: 'RESTRICT'
+  });
+  Cotizaciones_Items.belongsTo(Producto, { 
+    foreignKey: 'id_producto',
+    as: 'producto'
+  });
+
+  // Cotizaciones -> Cotizaciones_Ordenes (1:1)
+  Cotizaciones.hasOne(Cotizaciones_Ordenes, { 
+    foreignKey: 'id_cotizacion',
+    as: 'ordenConversion',
+    onDelete: 'CASCADE'
+  });
+  Cotizaciones_Ordenes.belongsTo(Cotizaciones, { 
+    foreignKey: 'id_cotizacion',
+    as: 'cotizacion'
+  });
+
+  // Orden -> Cotizaciones_Ordenes (1:N)
+  Orden.hasMany(Cotizaciones_Ordenes, { 
+    foreignKey: 'id_orden',
+    as: 'cotizacionesAsociadas',
+    onDelete: 'CASCADE'
+  });
+  Cotizaciones_Ordenes.belongsTo(Orden, { 
+    foreignKey: 'id_orden',
+    as: 'orden'
+  });
+
+  // ==================== DEVOLUCIONES ====================
+
+  // Orden -> Devoluciones (1:N)
+  Orden.hasMany(Devoluciones, { 
+    foreignKey: 'id_orden',
+    as: 'devoluciones',
+    onDelete: 'CASCADE'
+  });
+  Devoluciones.belongsTo(Orden, { 
+    foreignKey: 'id_orden',
+    as: 'orden'
+  });
+
+  // Cliente -> Devoluciones (1:N)
+  Cliente.hasMany(Devoluciones, { 
+    foreignKey: 'id_cliente',
+    as: 'devoluciones',
+    onDelete: 'CASCADE'
+  });
+  Devoluciones.belongsTo(Cliente, { 
+    foreignKey: 'id_cliente',
+    as: 'cliente'
+  });
+
+  // Usuario -> Devoluciones (quien aprobó)
+  Usuario.hasMany(Devoluciones, { 
+    foreignKey: 'id_usuario_aprobo',
+    as: 'devolucionesAprobadas',
+    onDelete: 'SET NULL'
+  });
+  Devoluciones.belongsTo(Usuario, { 
+    foreignKey: 'id_usuario_aprobo',
+    as: 'usuarioAprobo'
+  });
+
+  // Devoluciones -> Devoluciones_Items (1:N)
+  Devoluciones.hasMany(Devoluciones_Items, { 
+    foreignKey: 'id_devolucion',
+    as: 'items',
+    onDelete: 'CASCADE'
+  });
+  Devoluciones_Items.belongsTo(Devoluciones, { 
+    foreignKey: 'id_devolucion',
+    as: 'devolucion'
+  });
+
+  // Producto -> Devoluciones_Items (1:N)
+  Producto.hasMany(Devoluciones_Items, { 
+    foreignKey: 'id_producto',
+    as: 'itemsDevolucion',
+    onDelete: 'RESTRICT'
+  });
+  Devoluciones_Items.belongsTo(Producto, { 
+    foreignKey: 'id_producto',
+    as: 'producto'
+  });
+
+  // Devoluciones -> Reembolsos (1:N)
+  Devoluciones.hasMany(Reembolsos, { 
+    foreignKey: 'id_devolucion',
+    as: 'reembolsos',
+    onDelete: 'CASCADE'
+  });
+  Reembolsos.belongsTo(Devoluciones, { 
+    foreignKey: 'id_devolucion',
+    as: 'devolucion'
+  });
+
+  // Usuario -> Reembolsos (quien aprobó)
+  Usuario.hasMany(Reembolsos, { 
+    foreignKey: 'id_usuario_aprobo_reembolso',
+    as: 'reembolsosAprobados',
+    onDelete: 'SET NULL'
+  });
+  Reembolsos.belongsTo(Usuario, { 
+    foreignKey: 'id_usuario_aprobo_reembolso',
+    as: 'usuarioAprobo'
+  });
 };
 
 // Ejecutar las asociaciones
@@ -556,6 +714,10 @@ export {
     OrdenesCompra,
     OrdenesCompraDetalle,
     AlertasInventario,
+    // Cotizaciones Models
+    Cotizaciones,
+    Cotizaciones_Items,
+    Cotizaciones_Ordenes,
     setupAssociations
 };
 
@@ -593,4 +755,13 @@ export default {
     OrdenesCompra,
     OrdenesCompraDetalle,
     AlertasInventario,
+    // Cotizaciones Models
+    Cotizaciones,
+    Cotizaciones_Items,
+    Cotizaciones_Ordenes,
+    // Devoluciones y Reembolsos Models
+    Devoluciones,
+    Devoluciones_Items,
+    Reembolsos,
+    Politicas_Devolucion,
 };

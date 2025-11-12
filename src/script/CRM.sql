@@ -248,6 +248,60 @@ CREATE TABLE Campana_Clientes (
 );
 
 -- ============================================
+-- TABLAS DE COTIZACIONES
+-- ============================================
+
+-- Tabla para cotizaciones
+CREATE TABLE Cotizaciones (
+    id_cotizacion SERIAL PRIMARY KEY,
+    id_cliente INTEGER NOT NULL,
+    id_usuario_creador INTEGER NOT NULL,
+    numero_cotizacion VARCHAR(50) UNIQUE NOT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_expiracion DATE,
+    estado VARCHAR(20) DEFAULT 'borrador' 
+        CHECK (estado IN ('borrador', 'enviada', 'aceptada', 'rechazada', 'expirada')),
+    subtotal NUMERIC(10,2) DEFAULT 0,
+    impuestos NUMERIC(10,2) DEFAULT 0,
+    total NUMERIC(10,2) DEFAULT 0,
+    notas TEXT,
+    terminos_condiciones TEXT,
+    FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario_creador) REFERENCES Usuarios(id_usuario) ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_cotizaciones_cliente ON Cotizaciones(id_cliente);
+CREATE INDEX idx_cotizaciones_estado ON Cotizaciones(estado);
+CREATE INDEX idx_cotizaciones_fecha ON Cotizaciones(fecha_creacion);
+
+-- Items de cotización
+CREATE TABLE Cotizaciones_Items (
+    id_cotizacion_item SERIAL PRIMARY KEY,
+    id_cotizacion INTEGER NOT NULL,
+    id_producto INTEGER NOT NULL,
+    cantidad INTEGER NOT NULL CHECK (cantidad > 0),
+    precio_unitario NUMERIC(10,2) NOT NULL CHECK (precio_unitario >= 0),
+    descuento_porcentaje NUMERIC(5,2) DEFAULT 0 CHECK (descuento_porcentaje >= 0 AND descuento_porcentaje <= 100),
+    subtotal NUMERIC(10,2) GENERATED ALWAYS AS (cantidad * precio_unitario * (1 - descuento_porcentaje/100)) STORED,
+    FOREIGN KEY (id_cotizacion) REFERENCES Cotizaciones(id_cotizacion) ON DELETE CASCADE,
+    FOREIGN KEY (id_producto) REFERENCES Producto(id_producto) ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_cotizaciones_items_cotizacion ON Cotizaciones_Items(id_cotizacion);
+CREATE INDEX idx_cotizaciones_items_producto ON Cotizaciones_Items(id_producto);
+
+-- Conversión de cotización a orden
+CREATE TABLE Cotizaciones_Ordenes (
+    id_cotizacion INTEGER PRIMARY KEY,
+    id_orden INTEGER NOT NULL,
+    fecha_conversion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_cotizacion) REFERENCES Cotizaciones(id_cotizacion) ON DELETE CASCADE,
+    FOREIGN KEY (id_orden) REFERENCES Ordenes(id_orden) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_cotizaciones_ordenes ON Cotizaciones_Ordenes(id_orden);
+
+-- ============================================
 -- FUNCIONES Y TRIGGERS PARA INVENTARIO
 -- ============================================
 
@@ -471,5 +525,282 @@ COMMENT ON TABLE Movimientos_Inventario IS 'Historial de todos los movimientos d
 COMMENT ON TABLE Proveedores IS 'Catálogo de proveedores';
 COMMENT ON TABLE Ordenes_Compra IS 'Órdenes de compra a proveedores';
 COMMENT ON TABLE Alertas_Inventario IS 'Alertas automáticas de inventario';
+COMMENT ON TABLE Cotizaciones IS 'Cotizaciones de ventas para clientes';
+COMMENT ON TABLE Cotizaciones_Items IS 'Items detallados de cotizaciones';
+COMMENT ON TABLE Cotizaciones_Ordenes IS 'Conversión de cotizaciones a órdenes de venta';
 
-SELECT 'Base de datos con CRM e Inventario creada exitosamente!' as mensaje;
+-- ============================================
+-- FUNCIONES PARA COTIZACIONES
+-- ============================================
+
+-- Función para actualizar estado de cotización expirada
+CREATE OR REPLACE FUNCTION verificar_cotizacion_expirada()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.fecha_expiracion IS NOT NULL AND NEW.fecha_expiracion < CURRENT_DATE 
+       AND NEW.estado IN ('borrador', 'enviada') THEN
+        NEW.estado := 'expirada';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_cotizacion_expirada
+    BEFORE UPDATE ON Cotizaciones
+    FOR EACH ROW
+    EXECUTE FUNCTION verificar_cotizacion_expirada();
+
+-- Función para registrar auditoría de cambios de estado
+CREATE TABLE IF NOT EXISTS Cotizaciones_Auditoria (
+    id_auditoria SERIAL PRIMARY KEY,
+    id_cotizacion INTEGER NOT NULL,
+    estado_anterior VARCHAR(20),
+    estado_nuevo VARCHAR(20),
+    usuario_cambio INTEGER,
+    fecha_cambio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    razon TEXT,
+    FOREIGN KEY (id_cotizacion) REFERENCES Cotizaciones(id_cotizacion) ON DELETE CASCADE,
+    FOREIGN KEY (usuario_cambio) REFERENCES Usuarios(id_usuario)
+);
+
+-- ============================================
+-- TABLAS DE DEVOLUCIONES Y REEMBOLSOS
+-- ============================================
+
+-- ============================================
+-- TABLA DE SOLICITUDES DE DEVOLUCIÓN
+-- ============================================
+CREATE TABLE Devoluciones (
+    id_devolucion SERIAL PRIMARY KEY,
+    id_orden INTEGER NOT NULL,
+    id_cliente INTEGER NOT NULL,
+    numero_devolucion VARCHAR(50) UNIQUE NOT NULL,
+    fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_aprobo_cliente TIMESTAMP,
+    fecha_aprobacion TIMESTAMP,
+    fecha_rechazo TIMESTAMP,
+    fecha_completada TIMESTAMP,
+    estado VARCHAR(30) DEFAULT 'solicitada' 
+        CHECK (estado IN ('solicitada', 'aprobada', 'rechazada', 'en_proceso', 'completada', 'cancelada')),
+    tipo_devolucion VARCHAR(20) NOT NULL 
+        CHECK (tipo_devolucion IN ('devolucion_total', 'devolucion_parcial', 'cambio_producto')),
+    motivo VARCHAR(100) NOT NULL 
+        CHECK (motivo IN ('producto_danado', 'producto_incorrecto', 'no_cumple_esperanzas', 'talla_incorrecta', 'color_incorrecto', 'arrepentimiento', 'otro')),
+    motivo_detalle TEXT,
+    metodo_reembolso VARCHAR(50) 
+        CHECK (metodo_reembolso IN ('original', 'credito_tienda', 'transferencia', 'efectivo')),
+    monto_total_devolucion NUMERIC(10,2) DEFAULT 0,
+    monto_aprobado NUMERIC(10,2) DEFAULT 0,
+    costo_envio_devolucion NUMERIC(10,2) DEFAULT 0,
+    quien_cubre_envio VARCHAR(20) DEFAULT 'cliente' 
+        CHECK (quien_cubre_envio IN ('cliente', 'empresa')),
+    guia_devolucion VARCHAR(100),
+    transportista_devolucion VARCHAR(50),
+    notas_internas TEXT,
+    notas_cliente TEXT,
+    evidencia_imagenes JSONB,
+    id_usuario_aprobo INTEGER,
+    FOREIGN KEY (id_orden) REFERENCES Ordenes(id_orden),
+    FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente),
+    FOREIGN KEY (id_usuario_aprobo) REFERENCES Usuarios(id_usuario)
+);
+
+CREATE INDEX idx_devoluciones_orden ON Devoluciones(id_orden);
+CREATE INDEX idx_devoluciones_cliente ON Devoluciones(id_cliente);
+CREATE INDEX idx_devoluciones_estado ON Devoluciones(estado);
+CREATE INDEX idx_devoluciones_fecha ON Devoluciones(fecha_solicitud);
+
+-- ============================================
+-- TABLA DE ÍTEMS PARA DEVOLUCIÓN
+-- ============================================
+CREATE TABLE Devoluciones_Items (
+    id_devolucion_item SERIAL PRIMARY KEY,
+    id_devolucion INTEGER NOT NULL,
+    id_orden_item INTEGER NOT NULL,
+    id_producto INTEGER NOT NULL,
+    cantidad_solicitada INTEGER NOT NULL CHECK (cantidad_solicitada > 0),
+    cantidad_aprobada INTEGER DEFAULT 0 CHECK (cantidad_aprobada >= 0),
+    precio_unitario NUMERIC(10,2) NOT NULL,
+    motivo_item VARCHAR(100),
+    estado_item VARCHAR(30) DEFAULT 'pendiente'
+        CHECK (estado_item IN ('pendiente', 'aprobado', 'rechazado', 'recibido', 'inspeccionado', 'reembolsado')),
+    condicion_producto VARCHAR(50)
+        CHECK (condicion_producto IN ('nuevo', 'como_nuevo', 'usado', 'danado', 'defectuoso')),
+    accion_tomar VARCHAR(50)
+        CHECK (accion_tomar IN ('reembolsar', 'reponer', 'credito', 'reparar', 'desechar')),
+    fecha_recibido TIMESTAMP,
+    fecha_inspeccion TIMESTAMP,
+    notas_inspeccion TEXT,
+    FOREIGN KEY (id_devolucion) REFERENCES Devoluciones(id_devolucion) ON DELETE CASCADE,
+    FOREIGN KEY (id_orden_item) REFERENCES Ordenes_Items(id_orden_item),
+    FOREIGN KEY (id_producto) REFERENCES Producto(id_producto)
+);
+
+CREATE INDEX idx_devoluciones_items_devolucion ON Devoluciones_Items(id_devolucion);
+CREATE INDEX idx_devoluciones_items_producto ON Devoluciones_Items(id_producto);
+CREATE INDEX idx_devoluciones_items_estado ON Devoluciones_Items(estado_item);
+
+-- ============================================
+-- TABLA DE REEMBOLSOS
+-- ============================================
+CREATE TABLE Reembolsos (
+    id_reembolso SERIAL PRIMARY KEY,
+    id_devolucion INTEGER NOT NULL,
+    id_metodo_pago INTEGER,
+    monto_reembolso NUMERIC(10,2) NOT NULL CHECK (monto_reembolso > 0),
+    moneda VARCHAR(3) DEFAULT 'GTQ',
+    estado_reembolso VARCHAR(30) DEFAULT 'pendiente'
+        CHECK (estado_reembolso IN ('pendiente', 'procesando', 'completado', 'fallido', 'revertido')),
+    fecha_solicitud_reembolso TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_procesamiento TIMESTAMP,
+    fecha_completado TIMESTAMP,
+    transaccion_reembolso_id VARCHAR(255),
+    motivo_fallo TEXT,
+    id_usuario_aprobo_reembolso INTEGER,
+    notas_reembolso TEXT,
+    FOREIGN KEY (id_devolucion) REFERENCES Devoluciones(id_devolucion),
+    FOREIGN KEY (id_metodo_pago) REFERENCES Metodos_Pago(id_metodo_pago),
+    FOREIGN KEY (id_usuario_aprobo_reembolso) REFERENCES Usuarios(id_usuario)
+);
+
+CREATE INDEX idx_reembolsos_devolucion ON Reembolsos(id_devolucion);
+CREATE INDEX idx_reembolsos_estado ON Reembolsos(estado_reembolso);
+CREATE INDEX idx_reembolsos_fecha ON Reembolsos(fecha_solicitud_reembolso);
+
+-- ============================================
+-- TABLA DE POLÍTICAS DE DEVOLUCIÓN
+-- ============================================
+CREATE TABLE Politicas_Devolucion (
+    id_politica SERIAL PRIMARY KEY,
+    nombre_politica VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    dias_devolucion INTEGER NOT NULL DEFAULT 30,
+    productos_permitidos JSONB,
+    condiciones_aceptacion TEXT,
+    metodo_reembolso_default VARCHAR(50),
+    costo_envio_cliente BOOLEAN DEFAULT true,
+    activo BOOLEAN DEFAULT true,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- VISTA DE DEVOLUCIONES CON DETALLES
+-- ============================================
+CREATE VIEW vista_devoluciones_detalle AS
+SELECT 
+    d.id_devolucion,
+    d.numero_devolucion,
+    d.fecha_solicitud,
+    d.estado,
+    d.tipo_devolucion,
+    d.motivo,
+    d.monto_total_devolucion,
+    d.monto_aprobado,
+    o.id_orden,
+    o.total_orden as total_orden_original,
+    c.id_cliente,
+    c.nombre || ' ' || c.apellido as nombre_cliente,
+    u.correo_electronico,
+    COUNT(di.id_devolucion_item) as total_items,
+    SUM(di.cantidad_solicitada) as cantidad_total_solicitada,
+    SUM(di.cantidad_aprobada) as cantidad_total_aprobada,
+    CASE 
+        WHEN d.fecha_completada IS NOT NULL THEN 'Completada'
+        WHEN d.estado = 'rechazada' THEN 'Rechazada'
+        WHEN d.estado = 'aprobada' THEN 'En proceso'
+        ELSE 'Pendiente'
+    END as estado_general
+FROM Devoluciones d
+INNER JOIN Ordenes o ON d.id_orden = o.id_orden
+INNER JOIN Clientes c ON d.id_cliente = c.id_cliente
+INNER JOIN Usuarios u ON c.id_usuario = u.id_usuario
+LEFT JOIN Devoluciones_Items di ON d.id_devolucion = di.id_devolucion
+GROUP BY d.id_devolucion, o.id_orden, c.id_cliente, u.correo_electronico;
+
+-- ============================================
+-- VISTA DE ITEMS PARA DEVOLUCIÓN
+-- ============================================
+CREATE VIEW vista_devoluciones_items_detalle AS
+SELECT 
+    di.id_devolucion_item,
+    di.id_devolucion,
+    d.numero_devolucion,
+    di.id_producto,
+    p.nombre_producto,
+    di.cantidad_solicitada,
+    di.cantidad_aprobada,
+    di.precio_unitario,
+    di.motivo_item,
+    di.estado_item,
+    di.condicion_producto,
+    di.accion_tomar,
+    oi.cantidad as cantidad_original,
+    (di.cantidad_solicitada * di.precio_unitario) as monto_solicitado,
+    (di.cantidad_aprobada * di.precio_unitario) as monto_aprobado
+FROM Devoluciones_Items di
+INNER JOIN Devoluciones d ON di.id_devolucion = d.id_devolucion
+INNER JOIN Producto p ON di.id_producto = p.id_producto
+INNER JOIN Ordenes_Items oi ON di.id_orden_item = oi.id_orden_item;
+
+-- ============================================
+-- VISTA DE REEMBOLSOS PENDIENTES
+-- ============================================
+CREATE VIEW vista_reembolsos_pendientes AS
+SELECT 
+    r.id_reembolso,
+    r.monto_reembolso,
+    r.estado_reembolso,
+    r.fecha_solicitud_reembolso,
+    d.numero_devolucion,
+    d.id_orden,
+    c.nombre || ' ' || c.apellido as cliente,
+    mp.nombre_metodo as metodo_pago,
+    u.nombre_usuario as aprobado_por
+FROM Reembolsos r
+INNER JOIN Devoluciones d ON r.id_devolucion = d.id_devolucion
+INNER JOIN Clientes c ON d.id_cliente = c.id_cliente
+LEFT JOIN Metodos_Pago mp ON r.id_metodo_pago = mp.id_metodo_pago
+LEFT JOIN Usuarios u ON r.id_usuario_aprobo_reembolso = u.id_usuario
+WHERE r.estado_reembolso IN ('pendiente', 'procesando');
+
+-- ============================================
+-- TRIGGERS PARA DEVOLUCIONES
+-- ============================================
+
+-- Función para generar número de devolución
+CREATE OR REPLACE FUNCTION generar_numero_devolucion()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_count INTEGER;
+    v_numero VARCHAR;
+BEGIN
+    IF NEW.numero_devolucion IS NULL THEN
+        SELECT COUNT(*) + 1 INTO v_count FROM Devoluciones;
+        NEW.numero_devolucion := 'DEV-' || TO_CHAR(CURRENT_DATE, 'YYYYMMDD') || '-' || LPAD(v_count::TEXT, 5, '0');
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_generar_numero_devolucion
+    BEFORE INSERT ON Devoluciones
+    FOR EACH ROW
+    EXECUTE FUNCTION generar_numero_devolucion();
+
+-- Función para actualizar política de devoluciones
+CREATE TRIGGER trigger_politicas_devolucion_actualizacion
+    BEFORE UPDATE ON Politicas_Devolucion
+    FOR EACH ROW
+    EXECUTE FUNCTION actualizar_fecha_modificacion();
+
+-- ============================================
+-- COMENTARIOS
+-- ============================================
+
+COMMENT ON TABLE Devoluciones IS 'Solicitudes de devolución y cambios de productos';
+COMMENT ON TABLE Devoluciones_Items IS 'Items individuales incluidos en una devolución';
+COMMENT ON TABLE Reembolsos IS 'Reembolsos de dinero asociados a devoluciones';
+COMMENT ON TABLE Politicas_Devolucion IS 'Políticas de devolución configurables del sistema';
+
+SELECT 'Base de datos con CRM, Inventario, Cotizaciones y Devoluciones creada exitosamente!' as mensaje;
