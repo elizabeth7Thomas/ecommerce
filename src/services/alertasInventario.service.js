@@ -1,5 +1,5 @@
 import AlertasInventario from '../models/alertasInventario.model.js';
-import { sequelize } from '../config/database.js';
+import sequelize from '../config/database.js';
 
 class AlertasInventarioService {
   // CREATE - Crear nueva alerta

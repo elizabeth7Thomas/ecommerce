@@ -1,5 +1,6 @@
 import UserService from '../services/user.service.js';
 import response from '../utils/response.js';
+import { Usuario } from '../models/index.js';
 
 class UsuarioController {
   // CREATE

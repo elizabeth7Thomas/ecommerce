@@ -24,9 +24,17 @@ const Orden = sequelize.define('Orden', {
         allowNull: false,
         validate: { min: 0 },
     },
-    estado_orden: {
-        type: DataTypes.STRING(50),
-        defaultValue: 'pendiente',
+    id_estado_orden: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    },
+    fecha_estado_cambio: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+    },
+    dias_estimados_entrega: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
     },
     notas_orden: {
         type: DataTypes.TEXT,

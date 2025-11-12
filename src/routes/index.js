@@ -1,14 +1,13 @@
 import { Router } from 'express';
 import authRoutes from './auth.routes.js';
 import rolRoutes from './rol.routes.js';
+import usuarioRoutes from './usuario.routes.js';
 import productRoutes from './product.routes.js';
-import { imagenRoutes } from './imagen.routes.js';
 import categoriaRoutes from './categoria.routes.js';
 import clienteRoutes from './cliente.routes.js';
 import direccionRoutes from './direccion.routes.js';
 import carritoRoutes from './carrito.routes.js';
 import ordenRoutes from './orden.routes.js';
-import { paymentRoutes } from './payment.routes.js';
 import campanasMarketingRoutes from './campanasMarketing.routes.js';
 
 const router = Router();
@@ -31,6 +30,8 @@ const router = Router();
  *     description: Registro, login y gestión de perfil de usuarios
  *   - name: Roles
  *     description: Gestión de roles y permisos de usuarios
+ *   - name: Usuarios
+ *     description: Gestión de usuarios del sistema
  *   - name: Productos
  *     description: Gestión de productos del catálogo
  *   - name: Imágenes
@@ -54,14 +55,13 @@ const router = Router();
 // Montar todas las rutas
 router.use('/auth', authRoutes);
 router.use('/roles', rolRoutes);
+router.use('/usuarios', usuarioRoutes);
 router.use('/productos', productRoutes);
-router.use('/imagenes', imagenRoutes); // Ruta de nivel superior (si existe)
 router.use('/categorias', categoriaRoutes);
 router.use('/clientes', clienteRoutes);
 router.use('/direcciones', direccionRoutes);
 router.use('/carrito', carritoRoutes);
 router.use('/ordenes', ordenRoutes);
-router.use('/pagos', paymentRoutes); // Ruta de nivel superior (si existe)
 router.use('/campanas-marketing', campanasMarketingRoutes);
 
 export default router;

@@ -1,4 +1,4 @@
-import { sequelize } from '../config/database.js';
+import sequelize from '../config/database.js';
 import OrdenItem from '../models/ordenesItems.model.js';
 
 class OrdenItemService {
