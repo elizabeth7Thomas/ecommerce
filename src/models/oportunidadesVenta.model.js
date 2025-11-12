@@ -10,18 +10,12 @@ const OportunidadesVenta = sequelize.define('OportunidadesVenta', {
     id_cliente: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: {
-            model: 'Clientes',
-            key: 'id_cliente'
-        }
+        references: { model: 'Clientes', key: 'id_cliente' }
     },
     id_usuario_asignado: {
         type: DataTypes.INTEGER,
         allowNull: true,
-        references: {
-            model: 'Usuarios',
-            key: 'id_usuario'
-        }
+        references: { model: 'Usuarios', key: 'id_usuario' }
     },
     titulo: {
         type: DataTypes.STRING(255),
@@ -46,17 +40,13 @@ const OportunidadesVenta = sequelize.define('OportunidadesVenta', {
         defaultValue: 'prospecto',
         allowNull: false
     },
-    fecha_creacion: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-        allowNull: false
-    },
+    // No definimos fecha_creacion ni fecha_actualizacion aquí
     fecha_cierre_estimada: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY, // Usar DATEONLY para columnas DATE
         allowNull: true
     },
     fecha_cierre_real: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY, // Usar DATEONLY para columnas DATE
         allowNull: true
     },
     motivo_perdida: {
@@ -69,8 +59,11 @@ const OportunidadesVenta = sequelize.define('OportunidadesVenta', {
         allowNull: false
     }
 }, {
-    tableName: 'Oportunidades_Venta',
-    timestamps: false
+    tableName: 'oportunidades_venta',
+    // 1. Habilitar y mapear timestamps
+    timestamps: true,
+    createdAt: 'fecha_creacion',
+    updatedAt: 'fecha_actualizacion'
 });
 
 export default OportunidadesVenta;

@@ -12,10 +12,13 @@ const CarritoCompras = sequelize.define('CarritoCompras', {
         allowNull: false,
     },
     estado: {
+        // La tabla usa VARCHAR(20), así que especificar la longitud es buena práctica.
         type: DataTypes.STRING(20),
         defaultValue: 'activo',
+        allowNull: false // En la tabla el CHECK no permite nulos implícitamente
     },
 }, {
+    // 1. Ajustar el nombre de la tabla para que coincida exactamente
     tableName: 'carrito_compras',
     timestamps: true,
     createdAt: 'fecha_creacion',

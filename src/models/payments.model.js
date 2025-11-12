@@ -11,12 +11,20 @@ const Payment = sequelize.define('Payment', {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-    metodo_pago: {
-        type: DataTypes.STRING(50),
-        allowNull: false,
+    // 1. Quitar la columna antigua y obsoleta
+    // metodo_pago: { ... },
+
+    // 2. Añadir las nuevas llaves foráneas que la reemplazan
+    id_metodo_pago: {
+        type: DataTypes.INTEGER,
+        allowNull: true, // Puede ser nulo si se usa id_metodo_pago_cliente
+    },
+    id_metodo_pago_cliente: {
+        type: DataTypes.INTEGER,
+        allowNull: true, // Puede ser nulo si es un pago único
     },
     monto: {
-        type: DataTypes.DECIMAL(10,2),
+        type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
         validate: { min: 0 },
     },
@@ -35,9 +43,27 @@ const Payment = sequelize.define('Payment', {
     detalles_pago: {
         type: DataTypes.TEXT,
     },
+    // 3. Añadir el resto de las nuevas columnas de la migración
+    codigo_autorizacion: {
+        type: DataTypes.STRING(100),
+    },
+    referencia_externa: {
+        type: DataTypes.STRING(255),
+    },
+    comision: {
+        type: DataTypes.DECIMAL(10, 2),
+        defaultValue: 0,
+    },
+    ip_origen: {
+        type: DataTypes.STRING(50),
+    },
+    datos_adicionales: {
+        type: DataTypes.JSONB,
+    },
 }, {
+    // 4. Ajustar el nombre para que coincida exactamente
     tableName: 'payments',
-    timestamps: false,
+    timestamps: false, // Correcto, esta tabla no tiene timestamps de auditoría
 });
 
 export default Payment;

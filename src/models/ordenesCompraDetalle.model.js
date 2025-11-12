@@ -9,6 +9,6 @@ const OrdenesCompraDetalle = sequelize.define('OrdenesCompraDetalle', {
     cantidad_recibida: { type: DataTypes.INTEGER, defaultValue: 0, validate: { min: 0 } },
     precio_unitario: { type: DataTypes.DECIMAL(10, 2), allowNull: false, validate: { min: 0 } },
     subtotal: { type: DataTypes.DECIMAL(10, 2), allowNull: true }
-}, { tableName: 'Ordenes_Compra_Detalle', timestamps: false });
+}, { tableName: 'ordenes_compra_detalle', timestamps: false });
 
 export default OrdenesCompraDetalle;

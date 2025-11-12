@@ -1,4 +1,3 @@
-//src/models/carritoProducto.model.js
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 
@@ -22,7 +21,7 @@ const CarritoProducto = sequelize.define('CarritoProducto', {
         validate: { min: 1 },
     },
     precio_unitario: {
-        type: DataTypes.DECIMAL(10,2),
+        type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
         validate: { min: 0 },
     },
@@ -31,6 +30,7 @@ const CarritoProducto = sequelize.define('CarritoProducto', {
         defaultValue: DataTypes.NOW,
     },
 }, {
+    
     tableName: 'carrito_productos',
     timestamps: false,
     indexes: [

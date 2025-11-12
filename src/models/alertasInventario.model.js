@@ -9,6 +9,6 @@ const AlertasInventario = sequelize.define('AlertasInventario', {
     fecha_alerta: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     resuelta: { type: DataTypes.BOOLEAN, defaultValue: false },
     fecha_resolucion: { type: DataTypes.DATE, allowNull: true }
-}, { tableName: 'Alertas_Inventario', timestamps: false });
+}, { tableName: 'alertas_inventario', timestamps: false });
 
 export default AlertasInventario;

@@ -15,18 +15,15 @@ const Orden = sequelize.define('Orden', {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-    fecha_orden: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-    },
+    // fecha_orden será manejada por createdAt
     total_orden: {
-        type: DataTypes.DECIMAL(10,2),
+        type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
         validate: { min: 0 },
     },
     id_estado_orden: {
         type: DataTypes.INTEGER,
-        allowNull: true,
+        allowNull: true, // Correcto, ya que puede no tener estado inicial
     },
     fecha_estado_cambio: {
         type: DataTypes.DATE,
@@ -40,9 +37,10 @@ const Orden = sequelize.define('Orden', {
         type: DataTypes.TEXT,
     },
 }, {
+    // 1. Ajustar nombre de la tabla para consistencia
     tableName: 'ordenes',
     timestamps: true,
-    createdAt: 'fecha_orden',
+    createdAt: 'fecha_orden', // Mapeo inteligente
     updatedAt: 'fecha_actualizacion',
 });
 

@@ -11,7 +11,7 @@ const Cliente = sequelize.define('Cliente', {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: 'Usuarios', // Nombre de la tabla de usuarios
+            model: 'Usuario', // Asume que el modelo se llamará 'Usuario'
             key: 'id_usuario'
         }
     },
@@ -25,6 +25,7 @@ const Cliente = sequelize.define('Cliente', {
         type: DataTypes.STRING(20),
     },
 }, {
+    // 1. Ajustar el nombre de la tabla
     tableName: 'clientes',
     timestamps: false,
 });

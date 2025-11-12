@@ -17,15 +17,15 @@ const CampanasMarketing = sequelize.define('CampanasMarketing', {
     },
     tipo_campana: {
         type: DataTypes.ENUM('email', 'sms', 'redes_sociales', 'telefonica', 'mixta'),
-        allowNull: false,
-        defaultValue: 'email'
+        allowNull: false
+        // El defaultValue es opcional, puedes mantenerlo si lo deseas a nivel de app
     },
     fecha_inicio: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY, // Usar DATEONLY para campos DATE de SQL sin hora
         allowNull: false
     },
     fecha_fin: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY, // Usar DATEONLY para campos DATE de SQL sin hora
         allowNull: true
     },
     presupuesto: {
@@ -40,15 +40,14 @@ const CampanasMarketing = sequelize.define('CampanasMarketing', {
         type: DataTypes.ENUM('planificada', 'activa', 'pausada', 'completada', 'cancelada'),
         defaultValue: 'planificada',
         allowNull: false
-    },
-    fecha_creacion: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-        allowNull: false
     }
+
 }, {
-    tableName: 'Campanas_Marketing',
-    timestamps: false
+    tableName: 'campanas_marketing',
+    
+    timestamps: true,
+    createdAt: 'fecha_creacion',
+    updatedAt: 'fecha_actualizacion'
 });
 
 export default CampanasMarketing;

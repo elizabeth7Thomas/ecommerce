@@ -26,7 +26,7 @@ const Rol = sequelize.define('Rol', {
         defaultValue: true,
     },
 }, {
-    tableName: 'Roles',
+    tableName: 'roles',
     timestamps: true,
     createdAt: 'fecha_creacion',
     updatedAt: 'fecha_actualizacion',

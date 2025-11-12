@@ -13,6 +13,6 @@ const OrdenesCompra = sequelize.define('OrdenesCompra', {
     total_orden: { type: DataTypes.DECIMAL(10, 2), allowNull: false, validate: { min: 0 } },
     estado: { type: DataTypes.ENUM('pendiente', 'aprobada', 'enviada', 'recibida', 'cancelada'), defaultValue: 'pendiente' },
     notas: { type: DataTypes.TEXT, allowNull: true }
-}, { tableName: 'Ordenes_Compra', timestamps: false });
+}, { tableName: 'ordenes_compra', timestamps: false });
 
 export default OrdenesCompra;

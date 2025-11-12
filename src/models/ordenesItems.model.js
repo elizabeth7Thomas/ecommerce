@@ -21,26 +21,24 @@ const OrdenItem = sequelize.define('OrdenItem', {
         validate: { min: 1 },
     },
     precio_unitario: {
-        type: DataTypes.DECIMAL(10,2),
+        type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
         validate: { min: 0 },
     },
+    // 1. Definimos la columna para que Sequelize sepa que existe para leerla.
+    //    Sequelize es lo suficientemente inteligente como para no incluirla en inserts/updates
+    //    si no se le asigna un valor explícitamente.
     subtotal: {
-        type: DataTypes.DECIMAL(10,2),
-        allowNull: false,
+        type: DataTypes.DECIMAL(10, 2),
+        // No necesita 'allowNull' ya que la BD siempre la generará.
     },
 }, {
+    // 3. Corregir el nombre de la tabla para que coincida exactamente
     tableName: 'ordenes_items',
     timestamps: false,
 });
 
-// Hook to compute subtotal before create/update
-OrdenItem.addHook('beforeValidate', (item) => {
-    if (item.cantidad != null && item.precio_unitario != null) {
-        // Ensure decimal multiplication yields string/number consistent with DB
-        const subtotal = (Number(item.cantidad) * Number(item.precio_unitario)).toFixed(2);
-        item.subtotal = subtotal;
-    }
-});
+// 2. Eliminar el hook por completo. La base de datos se encargará del cálculo.
+// OrdenItem.addHook('beforeValidate', (item) => { ... });
 
 export default OrdenItem;

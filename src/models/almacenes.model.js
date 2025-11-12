@@ -9,6 +9,6 @@ const Almacenes = sequelize.define('Almacenes', {
     responsable: { type: DataTypes.STRING(100), allowNull: true },
     activo: { type: DataTypes.BOOLEAN, defaultValue: true },
     fecha_creacion: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
-}, { tableName: 'Almacenes', timestamps: false });
+}, { tableName: 'almacenes', timestamps: false });
 
 export default Almacenes;

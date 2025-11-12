@@ -10,23 +10,16 @@ const InteraccionesCliente = sequelize.define('InteraccionesCliente', {
     id_cliente: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: {
-            model: 'Clientes',
-            key: 'id_cliente'
-        }
+        references: { model: 'Clientes', key: 'id_cliente' }
     },
     id_usuario_asignado: {
         type: DataTypes.INTEGER,
         allowNull: true,
-        references: {
-            model: 'Usuarios',
-            key: 'id_usuario'
-        }
+        references: { model: 'Usuarios', key: 'id_usuario' }
     },
     tipo_interaccion: {
         type: DataTypes.ENUM('llamada', 'email', 'chat', 'reunion', 'nota', 'reclamo', 'consulta'),
-        allowNull: false,
-        defaultValue: 'nota'
+        allowNull: false
     },
     descripcion: {
         type: DataTypes.TEXT,
@@ -46,7 +39,7 @@ const InteraccionesCliente = sequelize.define('InteraccionesCliente', {
         allowNull: true
     },
     fecha_proxima_accion: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY, // Usar DATEONLY para columnas DATE
         allowNull: true
     },
     estado: {
@@ -55,8 +48,11 @@ const InteraccionesCliente = sequelize.define('InteraccionesCliente', {
         allowNull: false
     }
 }, {
-    tableName: 'Interacciones_Cliente',
-    timestamps: false
+    tableName: 'interacciones_cliente',
+    
+    timestamps: true,
+    createdAt: 'fecha_creacion',
+    updatedAt: 'fecha_actualizacion'
 });
 
 export default InteraccionesCliente;

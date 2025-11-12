@@ -10,6 +10,10 @@ const Inventario = sequelize.define('Inventario', {
     cantidad_maxima: { type: DataTypes.INTEGER, defaultValue: 1000 },
     ubicacion_fisica: { type: DataTypes.STRING(50), allowNull: true },
     fecha_actualizacion: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
-}, { tableName: 'Inventario', timestamps: false });
-
+}, {
+    tableName: 'Inventario',
+    timestamps: true,
+    createdAt: false, // O 'fecha_creacion' si la tienes
+    updatedAt: 'fecha_actualizacion'
+});
 export default Inventario;

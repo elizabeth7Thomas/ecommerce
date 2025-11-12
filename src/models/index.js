@@ -11,6 +11,10 @@ import CarritoProducto from './carritoProducto.model.js';
 import Orden from './ordenes.model.js';
 import OrdenItem from './ordenesItems.model.js';
 import Payment from './payments.model.js';
+import OrdenEstado from './ordenEstado.model.js';
+import OrdenEstadoHistorial from './ordenEstadoHistorial.model.js';
+import MetodoPago from './metodoPago.model.js';
+import MetodoPagoCliente from './metodoPagoCliente.model.js';
 // CRM Models
 import InteraccionesCliente from './interaccionesCliente.model.js';
 import OportunidadesVenta from './oportunidadesVenta.model.js';
@@ -169,6 +173,107 @@ const setupAssociations = () => {
   Payment.belongsTo(Orden, { 
     foreignKey: 'id_orden',
     as: 'orden'
+  });
+
+  // ==========================================
+  // RELACIONES DE ESTADOS DE ORDEN
+  // ==========================================
+
+  // OrdenEstado -> Orden (1:N)
+  OrdenEstado.hasMany(Orden, { 
+    foreignKey: 'id_estado_orden',
+    as: 'ordenes'
+  });
+  Orden.belongsTo(OrdenEstado, { 
+    foreignKey: 'id_estado_orden',
+    as: 'estadoActual'
+  });
+
+  // Orden -> OrdenEstadoHistorial (1:N)
+  Orden.hasMany(OrdenEstadoHistorial, { 
+    foreignKey: 'id_orden',
+    as: 'historialEstados',
+    onDelete: 'CASCADE'
+  });
+  OrdenEstadoHistorial.belongsTo(Orden, { 
+    foreignKey: 'id_orden',
+    as: 'orden'
+  });
+
+  // OrdenEstado -> OrdenEstadoHistorial (estado nuevo)
+  OrdenEstado.hasMany(OrdenEstadoHistorial, { 
+    foreignKey: 'id_estado_nuevo',
+    as: 'historialesNuevo'
+  });
+  OrdenEstadoHistorial.belongsTo(OrdenEstado, { 
+    foreignKey: 'id_estado_nuevo',
+    as: 'estadoNuevo'
+  });
+
+  // OrdenEstado -> OrdenEstadoHistorial (estado anterior)
+  OrdenEstado.hasMany(OrdenEstadoHistorial, { 
+    foreignKey: 'id_estado_anterior',
+    as: 'historialesAnterior'
+  });
+  OrdenEstadoHistorial.belongsTo(OrdenEstado, { 
+    foreignKey: 'id_estado_anterior',
+    as: 'estadoAnterior'
+  });
+
+  // Usuario -> OrdenEstadoHistorial (quién hizo el cambio)
+  Usuario.hasMany(OrdenEstadoHistorial, { 
+    foreignKey: 'id_usuario',
+    as: 'cambiosEstadoOrdenes',
+    onDelete: 'SET NULL'
+  });
+  OrdenEstadoHistorial.belongsTo(Usuario, { 
+    foreignKey: 'id_usuario',
+    as: 'usuarioQueHizoCambio'
+  });
+
+  // ==========================================
+  // RELACIONES DE MÉTODOS DE PAGO
+  // ==========================================
+
+  // MetodoPago -> Payment (1:N)
+  MetodoPago.hasMany(Payment, { 
+    foreignKey: 'id_metodo_pago',
+    as: 'pagos'
+  });
+  Payment.belongsTo(MetodoPago, { 
+    foreignKey: 'id_metodo_pago',
+    as: 'metodoPago'
+  });
+
+  // Cliente -> MetodoPagoCliente (1:N)
+  Cliente.hasMany(MetodoPagoCliente, { 
+    foreignKey: 'id_cliente',
+    as: 'metodosPago',
+    onDelete: 'CASCADE'
+  });
+  MetodoPagoCliente.belongsTo(Cliente, { 
+    foreignKey: 'id_cliente',
+    as: 'cliente'
+  });
+
+  // MetodoPago -> MetodoPagoCliente (1:N)
+  MetodoPago.hasMany(MetodoPagoCliente, { 
+    foreignKey: 'id_metodo_pago',
+    as: 'clientesConEsteMetodo'
+  });
+  MetodoPagoCliente.belongsTo(MetodoPago, { 
+    foreignKey: 'id_metodo_pago',
+    as: 'metodoPago'
+  });
+
+  // MetodoPagoCliente -> Payment (1:N)
+  MetodoPagoCliente.hasMany(Payment, { 
+    foreignKey: 'id_metodo_pago_cliente',
+    as: 'pagos'
+  });
+  Payment.belongsTo(MetodoPagoCliente, { 
+    foreignKey: 'id_metodo_pago_cliente',
+    as: 'metodoPagoCliente'
   });
 
   // ==========================================
@@ -431,6 +536,10 @@ export {
     Orden,
     OrdenItem,
     Payment,
+    OrdenEstado,
+    OrdenEstadoHistorial,
+    MetodoPago,
+    MetodoPagoCliente,
     // CRM Models
     InteraccionesCliente,
     OportunidadesVenta,
@@ -464,6 +573,10 @@ export default {
     Orden,
     OrdenItem,
     Payment,
+    OrdenEstado,
+    OrdenEstadoHistorial,
+    MetodoPago,
+    MetodoPagoCliente,
     // CRM Models
     InteraccionesCliente,
     OportunidadesVenta,
