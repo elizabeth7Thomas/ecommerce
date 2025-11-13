@@ -58,7 +58,7 @@ const Cotizaciones = sequelize.define('Cotizaciones', {
         type: DataTypes.TEXT
     }
 }, {
-    tableName: 'Cotizaciones',
+    tableName: 'cotizaciones',
     timestamps: false
 });
 

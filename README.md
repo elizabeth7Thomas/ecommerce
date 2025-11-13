@@ -53,6 +53,7 @@ psql -U tu_usuario -d postgres -f src/script/ecommerce.sql
 psql -U tu_usuario -d postgres -f src/script/CRM.sql
 psql -U tu_usuario -d postgres -f src/script/metodo_pago.sql
 psql -U tu_usuario -d postgres -f src/script/ordenes.sql
+psql -U tu_usuario -d postgres -f src/script/create-categoria-producto.sql
 npm run setup:roles
 ```
 
