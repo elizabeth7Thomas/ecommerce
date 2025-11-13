@@ -3,28 +3,96 @@ import * as cotizacionService from '../services/cotizacion.service.js';
 /**
  * Crear nueva cotización
  */
+/**
+ * Crear nueva cotización (MEJORADO)
+ */
 export const crearCotizacion = async (req, res) => {
     try {
         const { id_cliente, fecha_expiracion, notas, terminos_condiciones } = req.body;
-        // Asumiendo que el ID del usuario viene de un middleware de autenticación
-        const id_usuario_creador = req.id_usuario; // Cambiado de req.user.id_usuario
+        const id_usuario_creador = req.id_usuario;
+
+        // Validaciones
         if (!id_cliente) {
             return res.status(400).json({ 
                 success: false,
                 mensaje: 'El id_cliente es requerido' 
             });
         }
-        const datos = { fecha_expiracion, notas, terminos_condiciones };
-        const cotizacion = await cotizacionService.crearCotizacion(id_cliente, id_usuario_creador, datos);
+
+        // Usar la versión mejorada con manejo seguro de transacciones
+        const cotizacion = await cotizacionService.crearCotizacionMejorada(
+            id_cliente, 
+            id_usuario_creador, 
+            { fecha_expiracion, notas, terminos_condiciones }
+        );
+        
         res.status(201).json({
             success: true,
+            mensaje: 'Cotización creada exitosamente',
             data: cotizacion
         });
+        
     } catch (error) {
-        console.error('Error crearCotizacion:', error);
+        console.error('Error en crearCotizacion:', error);
+        
+        // Manejar errores específicos
+        if (error.message.includes('no existe')) {
+            return res.status(400).json({ 
+                success: false,
+                error: error.message 
+            });
+        }
+        
         res.status(500).json({ 
             success: false,
             error: error.message 
+        });
+    }
+};
+
+/**
+ * Endpoint para probar con datos seguros
+ */
+export const crearCotizacionPrueba = async (req, res) => {
+    try {
+        // Obtener el primer cliente disponible
+        const { Clientes } = await import('../models/clientes.model.js');
+        const cliente = await Clientes.findOne({
+            attributes: ['id_cliente'],
+            order: [['id_cliente', 'ASC']]
+        });
+
+        if (!cliente) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'No hay clientes disponibles en la base de datos'
+            });
+        }
+
+        const id_usuario_creador = req.id_usuario;
+        const datos = {
+            fecha_expiracion: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días desde hoy
+            notas: 'Cotización de prueba',
+            terminos_condiciones: 'Términos y condiciones de prueba'
+        };
+
+        const cotizacion = await cotizacionService.crearCotizacionMejorada(
+            cliente.id_cliente,
+            id_usuario_creador,
+            datos
+        );
+
+        res.status(201).json({
+            success: true,
+            mensaje: 'Cotización de prueba creada exitosamente',
+            data: cotizacion
+        });
+
+    } catch (error) {
+        console.error('Error en crearCotizacionPrueba:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 };
