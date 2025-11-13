@@ -10,6 +10,7 @@ export const crearSolicitudDevolucion = async (req, res) => {
         // Validaciones
         if (!id_orden || !id_cliente || !tipo_devolucion || !motivo) {
             return res.status(400).json({ 
+                success: false,
                 mensaje: 'id_orden, id_cliente, tipo_devolucion y motivo son requeridos' 
             });
         }
@@ -18,6 +19,7 @@ export const crearSolicitudDevolucion = async (req, res) => {
         const elegibilidad = await devolucionService.verificarElegibilidadDevolucion(id_orden);
         if (!elegibilidad.elegible) {
             return res.status(400).json({ 
+                success: false,
                 mensaje: elegibilidad.razon 
             });
         }
@@ -36,11 +38,14 @@ export const crearSolicitudDevolucion = async (req, res) => {
         );
         
         res.status(201).json({
+            success: true,
             mensaje: 'Solicitud de devolución creada exitosamente',
-            devolucion
+            data: devolucion
         });
     } catch (error) {
+        console.error('Error crearSolicitudDevolucion:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -57,12 +62,14 @@ export const agregarItemDevolucion = async (req, res) => {
         // Validaciones
         if (!id_orden_item || !id_producto || !cantidad_solicitada || !precio_unitario) {
             return res.status(400).json({ 
+                success: false,
                 mensaje: 'id_orden_item, id_producto, cantidad_solicitada y precio_unitario son requeridos' 
             });
         }
         
         if (cantidad_solicitada <= 0) {
             return res.status(400).json({ 
+                success: false,
                 mensaje: 'La cantidad debe ser positiva' 
             });
         }
@@ -79,12 +86,17 @@ export const agregarItemDevolucion = async (req, res) => {
         const devolucionActualizada = await devolucionService.obtenerDevolucion(id_devolucion);
         
         res.status(201).json({
+            success: true,
             mensaje: 'Item agregado a devolución exitosamente',
-            item,
-            devolucion: devolucionActualizada
+            data: {
+                item,
+                devolucion: devolucionActualizada
+            }
         });
     } catch (error) {
+        console.error('Error agregarItemDevolucion:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -101,15 +113,19 @@ export const obtenerDevolucion = async (req, res) => {
         
         if (!devolucion) {
             return res.status(404).json({ 
+                success: false,
                 mensaje: 'Devolución no encontrada' 
             });
         }
         
         res.json({
-            devolucion
+            success: true,
+            data: devolucion
         });
     } catch (error) {
+        console.error('Error obtenerDevolucion:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -129,11 +145,16 @@ export const listarDevolucionesCliente = async (req, res) => {
         );
         
         res.json({
-            total: devoluciones.length,
-            devoluciones
+            success: true,
+            data: {
+                total: devoluciones.length,
+                devoluciones
+            }
         });
     } catch (error) {
+        console.error('Error listarDevolucionesCliente:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -149,11 +170,16 @@ export const listarDevolucionesOrden = async (req, res) => {
         const devoluciones = await devolucionService.listarDevolucionesOrden(id_orden);
         
         res.json({
-            total: devoluciones.length,
-            devoluciones
+            success: true,
+            data: {
+                total: devoluciones.length,
+                devoluciones
+            }
         });
     } catch (error) {
+        console.error('Error listarDevolucionesOrden:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -165,11 +191,12 @@ export const listarDevolucionesOrden = async (req, res) => {
 export const aprobarDevolucion = async (req, res) => {
     try {
         const { id_devolucion } = req.params;
-        const id_usuario = req.user.id_usuario;
+        const id_usuario = req.id_usuario;
         const { items_aprobados, notas_internas } = req.body;
         
         if (!items_aprobados) {
             return res.status(400).json({ 
+                success: false,
                 mensaje: 'items_aprobados es requerido' 
             });
         }
@@ -181,11 +208,14 @@ export const aprobarDevolucion = async (req, res) => {
         );
         
         res.json({
+            success: true,
             mensaje: 'Devolución aprobada exitosamente',
-            devolucion
+            data: devolucion
         });
     } catch (error) {
+        console.error('Error aprobarDevolucion:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -197,8 +227,15 @@ export const aprobarDevolucion = async (req, res) => {
 export const rechazarDevolucion = async (req, res) => {
     try {
         const { id_devolucion } = req.params;
-        const id_usuario = req.user.id_usuario;
+        const id_usuario = req.id_usuario;
         const { razon } = req.body;
+        
+        if (!razon) {
+            return res.status(400).json({ 
+                success: false,
+                mensaje: 'La razón del rechazo es requerida' 
+            });
+        }
         
         const devolucion = await devolucionService.rechazarDevolucion(
             id_devolucion,
@@ -207,11 +244,14 @@ export const rechazarDevolucion = async (req, res) => {
         );
         
         res.json({
+            success: true,
             mensaje: 'Devolución rechazada exitosamente',
-            devolucion
+            data: devolucion
         });
     } catch (error) {
+        console.error('Error rechazarDevolucion:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -227,6 +267,7 @@ export const registrarRecepcionDevolucion = async (req, res) => {
         
         if (!items_recibidos || !guia_devolucion) {
             return res.status(400).json({ 
+                success: false,
                 mensaje: 'items_recibidos y guia_devolucion son requeridos' 
             });
         }
@@ -237,11 +278,14 @@ export const registrarRecepcionDevolucion = async (req, res) => {
         );
         
         res.json({
+            success: true,
             mensaje: 'Recepción registrada exitosamente',
-            devolucion
+            data: devolucion
         });
     } catch (error) {
+        console.error('Error registrarRecepcionDevolucion:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -257,6 +301,7 @@ export const inspeccionarItems = async (req, res) => {
         
         if (!inspecciones) {
             return res.status(400).json({ 
+                success: false,
                 mensaje: 'inspecciones es requerido' 
             });
         }
@@ -267,11 +312,14 @@ export const inspeccionarItems = async (req, res) => {
         );
         
         res.json({
+            success: true,
             mensaje: 'Inspección completada exitosamente',
-            devolucion
+            data: devolucion
         });
     } catch (error) {
+        console.error('Error inspeccionarItems:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -285,9 +333,10 @@ export const crearReembolso = async (req, res) => {
         const { id_devolucion } = req.params;
         const { id_metodo_pago, monto_reembolso } = req.body;
         
-        if (!monto_reembolso) {
+        if (!monto_reembolso || monto_reembolso <= 0) {
             return res.status(400).json({ 
-                mensaje: 'monto_reembolso es requerido' 
+                success: false,
+                mensaje: 'monto_reembolso es requerido y debe ser positivo' 
             });
         }
         
@@ -298,11 +347,14 @@ export const crearReembolso = async (req, res) => {
         );
         
         res.status(201).json({
+            success: true,
             mensaje: 'Reembolso creado exitosamente',
-            reembolso
+            data: reembolso
         });
     } catch (error) {
+        console.error('Error crearReembolso:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -314,16 +366,19 @@ export const crearReembolso = async (req, res) => {
 export const procesarReembolso = async (req, res) => {
     try {
         const { id_reembolso } = req.params;
-        const id_usuario = req.user.id_usuario;
+        const id_usuario = req.id_usuario;
         
         const reembolso = await devolucionService.procesarReembolso(id_reembolso, id_usuario);
         
         res.json({
+            success: true,
             mensaje: 'Reembolso procesado exitosamente',
-            reembolso
+            data: reembolso
         });
     } catch (error) {
+        console.error('Error procesarReembolso:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -339,6 +394,7 @@ export const completarReembolso = async (req, res) => {
         
         if (!transaccion_id) {
             return res.status(400).json({ 
+                success: false,
                 mensaje: 'transaccion_id es requerido' 
             });
         }
@@ -346,11 +402,14 @@ export const completarReembolso = async (req, res) => {
         const reembolso = await devolucionService.completarReembolso(id_reembolso, transaccion_id);
         
         res.json({
+            success: true,
             mensaje: 'Reembolso completado exitosamente',
-            reembolso
+            data: reembolso
         });
     } catch (error) {
+        console.error('Error completarReembolso:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -366,10 +425,13 @@ export const verificarElegibilidad = async (req, res) => {
         const elegibilidad = await devolucionService.verificarElegibilidadDevolucion(id_orden);
         
         res.json({
-            elegibilidad
+            success: true,
+            data: elegibilidad
         });
     } catch (error) {
+        console.error('Error verificarElegibilidad:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -382,7 +444,7 @@ export const obtenerReporte = async (req, res) => {
     try {
         const { estado, id_cliente, fecha_inicio, fecha_fin } = req.query;
         
-        const reporte = await devolucionService.generarReporteDevolucioness({
+        const reporte = await devolucionService.generarReporteDevoluciones({
             estado,
             id_cliente,
             fecha_inicio,
@@ -390,10 +452,13 @@ export const obtenerReporte = async (req, res) => {
         });
         
         res.json({
-            reporte
+            success: true,
+            data: reporte
         });
     } catch (error) {
+        console.error('Error obtenerReporte:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -407,11 +472,16 @@ export const obtenerPendientes = async (req, res) => {
         const devoluciones = await devolucionService.obtenerDevolucionesPendientes();
         
         res.json({
-            total: devoluciones.length,
-            devoluciones
+            success: true,
+            data: {
+                total: devoluciones.length,
+                devoluciones
+            }
         });
     } catch (error) {
+        console.error('Error obtenerPendientes:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
@@ -425,14 +495,24 @@ export const cancelarDevolucion = async (req, res) => {
         const { id_devolucion } = req.params;
         const { razon } = req.body;
         
+        if (!razon) {
+            return res.status(400).json({ 
+                success: false,
+                mensaje: 'La razón de cancelación es requerida' 
+            });
+        }
+        
         const devolucion = await devolucionService.cancelarDevolucion(id_devolucion, razon);
         
         res.json({
+            success: true,
             mensaje: 'Devolución cancelada exitosamente',
-            devolucion
+            data: devolucion
         });
     } catch (error) {
+        console.error('Error cancelarDevolucion:', error);
         res.status(500).json({ 
+            success: false,
             error: error.message 
         });
     }
