@@ -10,6 +10,8 @@ import carritoRoutes from './carrito.routes.js';
 import ordenRoutes from './orden.routes.js';
 import campanasMarketingRoutes from './campanasMarketing.routes.js';
 import cotizacionesRoutes from './cotizaciones.routes.js';
+import cotizacionesItemsRoutes from './cotizacionesItems.routes.js';
+import cotizacionesOrdenesRoutes from './cotizacionesOrdenes.routes.js';
 import devolucionesRoutes from './devoluciones.routes.js';
 
 const router = Router();
@@ -54,6 +56,10 @@ const router = Router();
  *     description: Gestión de campañas de marketing y promociones
  *   - name: Cotizaciones
  *     description: Gestión de cotizaciones de ventas
+ *   - name: Items Cotización
+ *     description: Gestión de productos en cotizaciones
+ *   - name: Conversiones Cotización-Orden
+ *     description: Gestión de conversiones de cotizaciones a órdenes
  *   - name: Devoluciones
  *     description: Gestión de devoluciones y reembolsos de órdenes
  */
@@ -70,6 +76,8 @@ router.use('/carrito', carritoRoutes);
 router.use('/ordenes', ordenRoutes);
 router.use('/campanas-marketing', campanasMarketingRoutes);
 router.use('/cotizaciones', cotizacionesRoutes);
+router.use('/cotizaciones-items', cotizacionesItemsRoutes);
+router.use('/cotizaciones-ordenes', cotizacionesOrdenesRoutes);
 router.use('/devoluciones', devolucionesRoutes);
 
 export default router;

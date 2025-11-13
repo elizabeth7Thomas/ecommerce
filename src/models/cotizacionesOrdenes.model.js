@@ -23,7 +23,7 @@ const Cotizaciones_Ordenes = sequelize.define('Cotizaciones_Ordenes', {
         defaultValue: DataTypes.NOW
     }
 }, {
-    tableName: 'Cotizaciones_Ordenes',
+    tableName: 'cotizaciones_ordenes',
     timestamps: false
 });
 

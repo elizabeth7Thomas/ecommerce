@@ -45,7 +45,7 @@ const Cotizaciones_Items = sequelize.define('Cotizaciones_Items', {
         }
     }
 }, {
-    tableName: 'Cotizaciones_Items',
+    tableName: 'cotizaciones_items',
     timestamps: false
 });
 
