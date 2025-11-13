@@ -1,6 +1,6 @@
 import express from 'express';
 import * as cotizacionController from '../controllers/cotizacion.controller.js';
-import { verificarToken } from '../middlewares/auth.middleware.js';
+import { verifyToken } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -30,7 +30,7 @@ const router = express.Router();
  *       201:
  *         description: Cotización creada exitosamente
  */
-router.post('/', verificarToken, cotizacionController.crearCotizacion);
+router.post('/', verifyToken, cotizacionController.crearCotizacion);
 
 /**
  * @swagger
@@ -63,7 +63,7 @@ router.post('/', verificarToken, cotizacionController.crearCotizacion);
  *       201:
  *         description: Item agregado exitosamente
  */
-router.post('/:id_cotizacion/items', verificarToken, cotizacionController.agregarItem);
+router.post('/:id_cotizacion/items', verifyToken, cotizacionController.agregarItem);
 
 /**
  * @swagger
@@ -81,7 +81,7 @@ router.post('/:id_cotizacion/items', verificarToken, cotizacionController.agrega
  *       200:
  *         description: Cotización obtenida
  */
-router.get('/:id_cotizacion', verificarToken, cotizacionController.obtenerCotizacion);
+router.get('/:id_cotizacion', verifyToken, cotizacionController.obtenerCotizacion);
 
 /**
  * @swagger
@@ -104,7 +104,7 @@ router.get('/:id_cotizacion', verificarToken, cotizacionController.obtenerCotiza
  *       200:
  *         description: Lista de cotizaciones
  */
-router.get('/cliente/:id_cliente', verificarToken, cotizacionController.listarCotizacionesCliente);
+router.get('/cliente/:id_cliente', verifyToken, cotizacionController.listarCotizacionesCliente);
 
 /**
  * @swagger
@@ -136,7 +136,7 @@ router.get('/cliente/:id_cliente', verificarToken, cotizacionController.listarCo
  *       200:
  *         description: Cotización actualizada
  */
-router.put('/:id_cotizacion', verificarToken, cotizacionController.actualizarCotizacion);
+router.put('/:id_cotizacion', verifyToken, cotizacionController.actualizarCotizacion);
 
 /**
  * @swagger
@@ -154,7 +154,7 @@ router.put('/:id_cotizacion', verificarToken, cotizacionController.actualizarCot
  *       200:
  *         description: Item eliminado
  */
-router.delete('/items/:id_cotizacion_item', verificarToken, cotizacionController.eliminarItem);
+router.delete('/items/:id_cotizacion_item', verifyToken, cotizacionController.eliminarItem);
 
 /**
  * @swagger
@@ -172,7 +172,7 @@ router.delete('/items/:id_cotizacion_item', verificarToken, cotizacionController
  *       200:
  *         description: Cotización enviada
  */
-router.patch('/:id_cotizacion/enviar', verificarToken, cotizacionController.enviarCotizacion);
+router.patch('/:id_cotizacion/enviar', verifyToken, cotizacionController.enviarCotizacion);
 
 /**
  * @swagger
@@ -190,7 +190,7 @@ router.patch('/:id_cotizacion/enviar', verificarToken, cotizacionController.envi
  *       200:
  *         description: Cotización aceptada
  */
-router.patch('/:id_cotizacion/aceptar', verificarToken, cotizacionController.aceptarCotizacion);
+router.patch('/:id_cotizacion/aceptar', verifyToken, cotizacionController.aceptarCotizacion);
 
 /**
  * @swagger
@@ -208,7 +208,7 @@ router.patch('/:id_cotizacion/aceptar', verificarToken, cotizacionController.ace
  *       200:
  *         description: Cotización rechazada
  */
-router.patch('/:id_cotizacion/rechazar', verificarToken, cotizacionController.rechazarCotizacion);
+router.patch('/:id_cotizacion/rechazar', verifyToken, cotizacionController.rechazarCotizacion);
 
 /**
  * @swagger
@@ -235,7 +235,7 @@ router.patch('/:id_cotizacion/rechazar', verificarToken, cotizacionController.re
  *       200:
  *         description: Cotización convertida a orden
  */
-router.post('/:id_cotizacion/convertir-orden', verificarToken, cotizacionController.convertirAOrden);
+router.post('/:id_cotizacion/convertir-orden', verifyToken, cotizacionController.convertirAOrden);
 
 /**
  * @swagger
@@ -266,6 +266,6 @@ router.post('/:id_cotizacion/convertir-orden', verificarToken, cotizacionControl
  *       200:
  *         description: Reporte de cotizaciones
  */
-router.get('/reporte/general', verificarToken, cotizacionController.obtenerReporte);
+router.get('/reporte/general', verifyToken, cotizacionController.obtenerReporte);
 
 export default router;

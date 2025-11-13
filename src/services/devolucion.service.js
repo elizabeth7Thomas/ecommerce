@@ -6,7 +6,7 @@ import Orden from '../models/ordenes.model.js';
 import Cliente from '../models/cliente.model.js';
 import Producto from '../models/producto.model.js';
 import Ordenesitems from '../models/ordenesItems.model.js';
-import { sequelize } from '../config/database.js';
+import sequelize from '../config/database.js';
 
 /**
  * Generar número de devolución único

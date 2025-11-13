@@ -6,33 +6,16 @@ import * as cotizacionService from '../services/cotizacion.service.js';
 export const crearCotizacion = async (req, res) => {
     try {
         const { id_cliente, fecha_expiracion, notas, terminos_condiciones } = req.body;
-        const id_usuario_creador = req.user.id_usuario;
-        
-        // Validaciones
+        // Asumiendo que el ID del usuario viene de un middleware de autenticación
+        const id_usuario_creador = req.user.id_usuario; 
         if (!id_cliente) {
-            return res.status(400).json({ 
-                mensaje: 'El id_cliente es requerido' 
-            });
+            return res.status(400).json({ mensaje: 'El id_cliente es requerido' });
         }
-        
-        const cotizacion = await cotizacionService.crearCotizacion(
-            id_cliente,
-            id_usuario_creador,
-            {
-                fecha_expiracion,
-                notas,
-                terminos_condiciones
-            }
-        );
-        
-        res.status(201).json({
-            mensaje: 'Cotización creada exitosamente',
-            cotizacion
-        });
+        const datos = { fecha_expiracion, notas, terminos_condiciones };
+        const cotizacion = await cotizacionService.crearCotizacion(id_cliente, id_usuario_creador, datos);
+        res.status(201).json(cotizacion);
     } catch (error) {
-        res.status(500).json({ 
-            error: error.message 
-        });
+        res.status(500).json({ error: error.message });
     }
 };
 
@@ -43,40 +26,24 @@ export const agregarItem = async (req, res) => {
     try {
         const { id_cotizacion } = req.params;
         const { id_producto, cantidad, precio_unitario, descuento_porcentaje } = req.body;
-        
-        // Validaciones
         if (!id_producto || !cantidad || !precio_unitario) {
-            return res.status(400).json({ 
-                mensaje: 'id_producto, cantidad y precio_unitario son requeridos' 
-            });
+            return res.status(400).json({ mensaje: 'id_producto, cantidad y precio_unitario son requeridos' });
         }
-        
-        if (cantidad <= 0 || precio_unitario < 0) {
-            return res.status(400).json({ 
-                mensaje: 'La cantidad debe ser positiva y el precio no negativo' 
-            });
-        }
-        
         const item = await cotizacionService.agregarItemCotizacion(
             id_cotizacion,
             id_producto,
             cantidad,
             precio_unitario,
-            descuento_porcentaje || 0
+            descuento_porcentaje
         );
-        
-        // Obtener cotización actualizada
         const cotizacionActualizada = await cotizacionService.obtenerCotizacion(id_cotizacion);
-        
         res.status(201).json({
             mensaje: 'Item agregado exitosamente',
             item,
             cotizacion: cotizacionActualizada
         });
     } catch (error) {
-        res.status(500).json({ 
-            error: error.message 
-        });
+        res.status(500).json({ error: error.message });
     }
 };
 
@@ -86,22 +53,33 @@ export const agregarItem = async (req, res) => {
 export const obtenerCotizacion = async (req, res) => {
     try {
         const { id_cotizacion } = req.params;
-        
         const cotizacion = await cotizacionService.obtenerCotizacion(id_cotizacion);
-        
         if (!cotizacion) {
-            return res.status(404).json({ 
-                mensaje: 'Cotización no encontrada' 
-            });
+            return res.status(404).json({ mensaje: 'Cotización no encontrada' });
         }
-        
-        res.json({
-            cotizacion
-        });
+        res.status(200).json(cotizacion);
     } catch (error) {
-        res.status(500).json({ 
-            error: error.message 
+        res.status(500).json({ error: error.message });
+    }
+};
+/**
+ * Listar todas las cotizaciones con filtros y paginación
+ */
+export const listarCotizaciones = async (req, res) => {
+    try {
+        // Obteniendo filtros y paginación desde el query string
+        const { page, limit, estado, id_cliente } = req.query;
+        const id_usuario_creador = req.user.id_usuario; // Opcional: filtrar por usuario
+        const resultado = await cotizacionService.listarCotizaciones({
+            page,
+            limit,
+            estado,
+            id_cliente,
+            id_usuario_creador
         });
+        res.status(200).json(resultado);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 };
 
@@ -135,25 +113,21 @@ export const listarCotizacionesCliente = async (req, res) => {
 export const actualizarCotizacion = async (req, res) => {
     try {
         const { id_cotizacion } = req.params;
-        const { fecha_expiracion, notas, terminos_condiciones } = req.body;
-        
-        const cotizacion = await cotizacionService.actualizarCotizacion(
-            id_cotizacion,
-            {
-                fecha_expiracion,
-                notas,
-                terminos_condiciones
-            }
-        );
-        
-        res.json({
+        const updates = req.body;
+        const cotizacionActualizada = await cotizacionService.actualizarCotizacion(id_cotizacion, updates);
+        res.status(200).json({
             mensaje: 'Cotización actualizada exitosamente',
-            cotizacion
+            cotizacion: cotizacionActualizada
         });
     } catch (error) {
-        res.status(500).json({ 
-            error: error.message 
-        });
+        // Manejar errores específicos del servicio
+        if (error.message.includes('borrador')) {
+            return res.status(403).json({ error: error.message });
+        }
+        if (error.message.includes('no encontrada')) {
+            return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: error.message });
     }
 };
 
@@ -164,28 +138,27 @@ export const actualizarItem = async (req, res) => {
     try {
         const { id_cotizacion_item } = req.params;
         const { cantidad, precio_unitario, descuento_porcentaje } = req.body;
-        
-        // Validaciones
-        if (cantidad && cantidad <= 0) {
-            return res.status(400).json({ 
-                mensaje: 'La cantidad debe ser positiva' 
-            });
+        if (!cantidad && !precio_unitario && !descuento_porcentaje) {
+            return res.status(400).json({ mensaje: 'Debe proporcionar al menos un campo para actualizar.' });
         }
-        
-        if (precio_unitario && precio_unitario < 0) {
-            return res.status(400).json({ 
-                mensaje: 'El precio no puede ser negativo' 
-            });
-        }
-        
-        // Aquí necesitarías implementar una función de actualización en el servicio
-        res.status(501).json({ 
-            mensaje: 'Funcionalidad en desarrollo' 
+        const updates = { cantidad, precio_unitario, descuento_porcentaje };
+        // Eliminar propiedades nulas o indefinidas para no sobrescribir con nada
+        Object.keys(updates).forEach(key => updates[key] === undefined && delete updates[key]);
+        const itemActualizado = await cotizacionService.actualizarItemCotizacion(id_cotizacion_item, updates);
+        const cotizacionActualizada = await cotizacionService.obtenerCotizacion(itemActualizado.id_cotizacion);
+        res.status(200).json({
+            mensaje: 'Item actualizado exitosamente',
+            item: itemActualizado,
+            cotizacion: cotizacionActualizada
         });
     } catch (error) {
-        res.status(500).json({ 
-            error: error.message 
-        });
+        if (error.message.includes('borrador')) {
+            return res.status(403).json({ error: error.message });
+        }
+        if (error.message.includes('no encontrado')) {
+            return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: error.message });
     }
 };
 
@@ -195,78 +168,47 @@ export const actualizarItem = async (req, res) => {
 export const eliminarItem = async (req, res) => {
     try {
         const { id_cotizacion_item } = req.params;
-        
         const resultado = await cotizacionService.eliminarItemCotizacion(id_cotizacion_item);
-        
-        res.json({
-            mensaje: resultado.mensaje
-        });
+        res.status(200).json(resultado);
     } catch (error) {
-        res.status(500).json({ 
-            error: error.message 
-        });
+        if (error.message.includes('no encontrado')) {
+            return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: error.message });
     }
 };
 
+
 /**
- * Enviar cotización
+ * Cambiar estado de la cotización (función genérica)
  */
-export const enviarCotizacion = async (req, res) => {
+const cambiarEstadoCotizacion = async (serviceFunction, successMessage, req, res) => {
     try {
         const { id_cotizacion } = req.params;
-        
-        const cotizacion = await cotizacionService.enviarCotizacion(id_cotizacion);
-        
-        res.json({
-            mensaje: 'Cotización enviada exitosamente',
+        const cotizacion = await serviceFunction(id_cotizacion);
+        res.status(200).json({
+            mensaje: successMessage,
             cotizacion
         });
     } catch (error) {
-        res.status(500).json({ 
-            error: error.message 
-        });
+        if (error.message.includes('no encontrada')) {
+            return res.status(404).json({ error: error.message });
+        }
+        if (error.message.includes('no puede ser')) {
+            return res.status(409).json({ error: error.message }); // 409 Conflict
+        }
+        res.status(500).json({ error: error.message });
     }
 };
 
-/**
- * Aceptar cotización
- */
-export const aceptarCotizacion = async (req, res) => {
-    try {
-        const { id_cotizacion } = req.params;
-        
-        const cotizacion = await cotizacionService.aceptarCotizacion(id_cotizacion);
-        
-        res.json({
-            mensaje: 'Cotización aceptada exitosamente',
-            cotizacion
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            error: error.message 
-        });
-    }
-};
+export const enviarCotizacion = (req, res) => 
+    cambiarEstadoCotizacion(cotizacionService.enviarCotizacion, 'Cotización enviada exitosamente', req, res);
 
-/**
- * Rechazar cotización
- */
-export const rechazarCotizacion = async (req, res) => {
-    try {
-        const { id_cotizacion } = req.params;
-        
-        const cotizacion = await cotizacionService.rechazarCotizacion(id_cotizacion);
-        
-        res.json({
-            mensaje: 'Cotización rechazada exitosamente',
-            cotizacion
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            error: error.message 
-        });
-    }
-};
+export const aceptarCotizacion = (req, res) => 
+    cambiarEstadoCotizacion(cotizacionService.aceptarCotizacion, 'Cotización aceptada exitosamente', req, res);
+
+export const rechazarCotizacion = (req, res) => 
+    cambiarEstadoCotizacion(cotizacionService.rechazarCotizacion, 'Cotización rechazada exitosamente', req, res);
 
 /**
  * Convertir cotización a orden
@@ -275,26 +217,22 @@ export const convertirAOrden = async (req, res) => {
     try {
         const { id_cotizacion } = req.params;
         const { id_orden } = req.body;
-        
         if (!id_orden) {
-            return res.status(400).json({ 
-                mensaje: 'El id_orden es requerido' 
-            });
+            return res.status(400).json({ mensaje: 'El id_orden es requerido' });
         }
-        
-        const conversion = await cotizacionService.convertirCotizacionAOrden(
-            id_cotizacion,
-            id_orden
-        );
-        
-        res.json({
+        const conversion = await cotizacionService.convertirCotizacionAOrden(id_cotizacion, id_orden);
+        res.status(200).json({
             mensaje: 'Cotización convertida a orden exitosamente',
             conversion
         });
     } catch (error) {
-        res.status(500).json({ 
-            error: error.message 
-        });
+        if (error.message.includes('aceptada')) {
+            return res.status(409).json({ error: error.message });
+        }
+        if (error.message.includes('no encontrada')) {
+            return res.status(404).json({ error: error.message });
+        }
+        res.status(500).json({ error: error.message });
     }
 };
 
@@ -304,20 +242,14 @@ export const convertirAOrden = async (req, res) => {
 export const obtenerReporte = async (req, res) => {
     try {
         const { estado, id_cliente, fecha_inicio, fecha_fin } = req.query;
-        
         const reporte = await cotizacionService.generarReporteCotizaciones({
             estado,
             id_cliente,
             fecha_inicio,
             fecha_fin
         });
-        
-        res.json({
-            reporte
-        });
+        res.status(200).json(reporte);
     } catch (error) {
-        res.status(500).json({ 
-            error: error.message 
-        });
+        res.status(500).json({ error: error.message });
     }
 };

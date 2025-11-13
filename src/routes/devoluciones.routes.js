@@ -1,6 +1,6 @@
 import express from 'express';
 import * as devolucionController from '../controllers/devolucion.controller.js';
-import { verificarToken } from '../middlewares/auth.middleware.js';
+import { verifyToken } from '../middlewares/auth.middleware.js'; 
 
 const router = express.Router();
 
@@ -37,7 +37,7 @@ const router = express.Router();
  *       201:
  *         description: Solicitud de devolución creada
  */
-router.post('/', verificarToken, devolucionController.crearSolicitudDevolucion);
+router.post('/', verifyToken, devolucionController.crearSolicitudDevolucion);
 
 /**
  * @swagger
@@ -72,7 +72,7 @@ router.post('/', verificarToken, devolucionController.crearSolicitudDevolucion);
  *       201:
  *         description: Item agregado exitosamente
  */
-router.post('/:id_devolucion/items', verificarToken, devolucionController.agregarItemDevolucion);
+router.post('/:id_devolucion/items', verifyToken, devolucionController.agregarItemDevolucion);
 
 /**
  * @swagger
@@ -90,7 +90,7 @@ router.post('/:id_devolucion/items', verificarToken, devolucionController.agrega
  *       200:
  *         description: Devolución obtenida
  */
-router.get('/:id_devolucion', verificarToken, devolucionController.obtenerDevolucion);
+router.get('/:id_devolucion', verifyToken, devolucionController.obtenerDevolucion);
 
 /**
  * @swagger
@@ -112,7 +112,7 @@ router.get('/:id_devolucion', verificarToken, devolucionController.obtenerDevolu
  *       200:
  *         description: Lista de devoluciones
  */
-router.get('/cliente/:id_cliente', verificarToken, devolucionController.listarDevolucionesCliente);
+router.get('/cliente/:id_cliente', verifyToken, devolucionController.listarDevolucionesCliente);
 
 /**
  * @swagger
@@ -130,7 +130,7 @@ router.get('/cliente/:id_cliente', verificarToken, devolucionController.listarDe
  *       200:
  *         description: Lista de devoluciones
  */
-router.get('/orden/:id_orden', verificarToken, devolucionController.listarDevolucionesOrden);
+router.get('/orden/:id_orden', verifyToken, devolucionController.listarDevolucionesOrden);
 
 /**
  * @swagger
@@ -159,7 +159,7 @@ router.get('/orden/:id_orden', verificarToken, devolucionController.listarDevolu
  *       200:
  *         description: Devolución aprobada
  */
-router.patch('/:id_devolucion/aprobar', verificarToken, devolucionController.aprobarDevolucion);
+router.patch('/:id_devolucion/aprobar', verifyToken, devolucionController.aprobarDevolucion);
 
 /**
  * @swagger
@@ -186,7 +186,7 @@ router.patch('/:id_devolucion/aprobar', verificarToken, devolucionController.apr
  *       200:
  *         description: Devolución rechazada
  */
-router.patch('/:id_devolucion/rechazar', verificarToken, devolucionController.rechazarDevolucion);
+router.patch('/:id_devolucion/rechazar', verifyToken, devolucionController.rechazarDevolucion);
 
 /**
  * @swagger
@@ -219,7 +219,7 @@ router.patch('/:id_devolucion/rechazar', verificarToken, devolucionController.re
  *       200:
  *         description: Recepción registrada
  */
-router.post('/:id_devolucion/recepcion', verificarToken, devolucionController.registrarRecepcionDevolucion);
+router.post('/:id_devolucion/recepcion', verifyToken, devolucionController.registrarRecepcionDevolucion);
 
 /**
  * @swagger
@@ -246,7 +246,7 @@ router.post('/:id_devolucion/recepcion', verificarToken, devolucionController.re
  *       200:
  *         description: Inspección completada
  */
-router.post('/:id_devolucion/inspeccion', verificarToken, devolucionController.inspeccionarItems);
+router.post('/:id_devolucion/inspeccion', verifyToken, devolucionController.inspeccionarItems);
 
 /**
  * @swagger
@@ -275,7 +275,7 @@ router.post('/:id_devolucion/inspeccion', verificarToken, devolucionController.i
  *       201:
  *         description: Reembolso creado
  */
-router.post('/:id_devolucion/reembolso', verificarToken, devolucionController.crearReembolso);
+router.post('/:id_devolucion/reembolso', verifyToken, devolucionController.crearReembolso);
 
 /**
  * @swagger
@@ -293,7 +293,7 @@ router.post('/:id_devolucion/reembolso', verificarToken, devolucionController.cr
  *       200:
  *         description: Reembolso procesado
  */
-router.patch('/reembolsos/:id_reembolso/procesar', verificarToken, devolucionController.procesarReembolso);
+router.patch('/reembolsos/:id_reembolso/procesar', verifyToken, devolucionController.procesarReembolso);
 
 /**
  * @swagger
@@ -320,7 +320,7 @@ router.patch('/reembolsos/:id_reembolso/procesar', verificarToken, devolucionCon
  *       200:
  *         description: Reembolso completado
  */
-router.patch('/reembolsos/:id_reembolso/completar', verificarToken, devolucionController.completarReembolso);
+router.patch('/reembolsos/:id_reembolso/completar', verifyToken, devolucionController.completarReembolso);
 
 /**
  * @swagger
@@ -338,7 +338,7 @@ router.patch('/reembolsos/:id_reembolso/completar', verificarToken, devolucionCo
  *       200:
  *         description: Elegibilidad verificada
  */
-router.get('/orden/:id_orden/elegibilidad', verificarToken, devolucionController.verificarElegibilidad);
+router.get('/orden/:id_orden/elegibilidad', verifyToken, devolucionController.verificarElegibilidad);
 
 /**
  * @swagger
@@ -369,7 +369,7 @@ router.get('/orden/:id_orden/elegibilidad', verificarToken, devolucionController
  *       200:
  *         description: Reporte de devoluciones
  */
-router.get('/reporte/general', verificarToken, devolucionController.obtenerReporte);
+router.get('/reporte/general', verifyToken, devolucionController.obtenerReporte);
 
 /**
  * @swagger
@@ -381,7 +381,7 @@ router.get('/reporte/general', verificarToken, devolucionController.obtenerRepor
  *       200:
  *         description: Devoluciones pendientes
  */
-router.get('/pendientes/list', verificarToken, devolucionController.obtenerPendientes);
+router.get('/pendientes/list', verifyToken, devolucionController.obtenerPendientes);
 
 /**
  * @swagger
@@ -408,6 +408,6 @@ router.get('/pendientes/list', verificarToken, devolucionController.obtenerPendi
  *       200:
  *         description: Devolución cancelada
  */
-router.patch('/:id_devolucion/cancelar', verificarToken, devolucionController.cancelarDevolucion);
+router.patch('/:id_devolucion/cancelar', verifyToken, devolucionController.cancelarDevolucion);
 
 export default router;

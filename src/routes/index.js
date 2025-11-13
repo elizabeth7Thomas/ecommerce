@@ -48,14 +48,14 @@ const router = Router();
  *     description: Gestión del carrito de compras
  *   - name: Órdenes
  *     description: Gestión de órdenes de compra
-   - name: Pagos
-     description: Gestión de pagos de órdenes
-   - name: Campañas Marketing
-     description: Gestión de campañas de marketing y promociones
-   - name: Cotizaciones
-     description: Gestión de cotizaciones de ventas
-   - name: Devoluciones
-     description: Gestión de devoluciones y reembolsos de ordenes
+ *   - name: Pagos
+ *     description: Gestión de pagos de órdenes
+ *   - name: Campañas Marketing
+ *     description: Gestión de campañas de marketing y promociones
+ *   - name: Cotizaciones
+ *     description: Gestión de cotizaciones de ventas
+ *   - name: Devoluciones
+ *     description: Gestión de devoluciones y reembolsos de órdenes
  */
 
 // Montar todas las rutas
