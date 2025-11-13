@@ -156,7 +156,20 @@ export const handleError = (error) => {
   // Error genérico
   return internalError(message);
 };
+export const sendSuccess = (req, res, data, message = null, statusCode = 200) => {
+  const result = success(data, message);
+  return res.status(statusCode).json(result);
+};
 
+export const sendCreated = (req, res, data, message = null) => {
+  const result = created(data, message);
+  return res.status(201).json(result);
+};
+
+export const sendError = (req, res, message = 'Error interno del servidor', statusCode = 500) => {
+  const result = customError(statusCode, message);
+  return res.status(statusCode).json(result);
+};
 export default {
   success,
   created,
@@ -168,5 +181,8 @@ export default {
   conflict,
   internalError,
   customError,
-  handleError
+  handleError,
+  sendSuccess,   
+  sendCreated,   
+  sendError 
 };

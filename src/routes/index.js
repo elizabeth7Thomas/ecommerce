@@ -11,6 +11,8 @@ import ordenRoutes from './orden.routes.js';
 import campanasMarketingRoutes from './campanasMarketing.routes.js';
 import cotizacionesRoutes from './cotizaciones.routes.js';
 import devolucionesRoutes from './devoluciones.routes.js';
+import proveedoresRoutes from './proveedores.routes.js';
+import almacenesRoutes from './almacenes.routes.js';
 
 const router = Router();
 
@@ -60,6 +62,7 @@ const router = Router();
 
 // Montar todas las rutas
 router.use('/auth', authRoutes);
+router.use('/almacenes', almacenesRoutes);
 router.use('/roles', rolRoutes);
 router.use('/usuarios', usuarioRoutes);
 router.use('/productos', productRoutes);
@@ -71,5 +74,6 @@ router.use('/ordenes', ordenRoutes);
 router.use('/campanas-marketing', campanasMarketingRoutes);
 router.use('/cotizaciones', cotizacionesRoutes);
 router.use('/devoluciones', devolucionesRoutes);
+router.use('/proveedores', proveedoresRoutes);
 
 export default router;
