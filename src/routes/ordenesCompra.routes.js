@@ -190,7 +190,7 @@ router.get('/ordenes-compra/:id', verifyToken, ordenesCompraController.getById);
 router.get('/ordenes-compra/proveedor/:id_proveedor', verifyToken, ordenesCompraController.getByProveedor);
 router.get('/ordenes-compra/estado/:estado', verifyToken, ordenesCompraController.getByEstado);
 router.put('/ordenes-compra/:id', verifyToken, isAdmin, ordenesCompraController.update);
-router.put('/ordenes-compra/:id/estado', verifyToken, isAdmin, ordenesCompraController.updateEstado);
+router.put('/ordenes-compra/:id/estado', verifyToken, isAdmin, ordenesCompraController.cambiarEstado);
 router.put('/ordenes-compra/:id/entrega', verifyToken, isAdmin, ordenesCompraController.registrarEntrega);
 router.delete('/ordenes-compra/:id', verifyToken, isAdmin, ordenesCompraController.delete);
 

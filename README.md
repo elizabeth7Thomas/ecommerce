@@ -49,8 +49,10 @@ JWT_SECRET=tu_secreto_jwt_super_seguro
 4. Crear la base de datos
 ```bash
 # Ejecutar el script SQL
-psql -U tu_usuario -d postgres -f src/script/completo.sql
-psql -U tu_usuario -d postgres -f src/script/create-categoria-producto.sql
+psql -U tu_usuario -d postgres -f src/script/ecommerce.sql
+psql -U tu_usuario -d postgres -f src/script/CRM.sql
+psql -U tu_usuario -d postgres -f src/script/metodo_pago.sql
+psql -U tu_usuario -d postgres -f src/script/ordenes.sql
 npm run setup:roles
 ```
 
