@@ -1,10 +1,9 @@
-
 import Cotizaciones from '../models/cotizaciones.model.js';
 import Cotizaciones_Items from '../models/cotizacionesItems.model.js';
 import Cotizaciones_Ordenes from '../models/cotizacionesOrdenes.model.js';
 import Producto from '../models/producto.model.js';
 import sequelize  from '../config/database.js';
-import { Op } from 'sequelize'; // Importar Op para consultas complejas
+import { Op } from 'sequelize';
 
 /**
  * Generar número de cotización único
@@ -29,6 +28,7 @@ export const generarNumeroCotizacion = async () => {
  * Crear nueva cotización
  */
 export const crearCotizacion = async (id_cliente, id_usuario_creador, datos) => {
+    const transaction = await sequelize.transaction();
     try {
         const numero_cotizacion = await generarNumeroCotizacion();
         
@@ -40,10 +40,12 @@ export const crearCotizacion = async (id_cliente, id_usuario_creador, datos) => 
             notas: datos.notas,
             terminos_condiciones: datos.terminos_condiciones,
             estado: 'borrador'
-        });
+        }, { transaction });
         
-        return cotizacion;
+        await transaction.commit();
+        return await obtenerCotizacion(cotizacion.id_cotizacion);
     } catch (error) {
+        await transaction.rollback();
         throw new Error(`Error al crear cotización: ${error.message}`);
     }
 };
@@ -54,6 +56,15 @@ export const crearCotizacion = async (id_cliente, id_usuario_creador, datos) => 
 export const agregarItemCotizacion = async (id_cotizacion, id_producto, cantidad, precio_unitario, descuento_porcentaje = 0) => {
     const t = await sequelize.transaction();
     try {
+        // Verificar que la cotización existe y está en estado borrador
+        const cotizacion = await Cotizaciones.findByPk(id_cotizacion, { transaction: t });
+        if (!cotizacion) {
+            throw new Error('Cotización no encontrada');
+        }
+        if (cotizacion.estado !== 'borrador') {
+            throw new Error('Solo se pueden agregar items a cotizaciones en estado borrador');
+        }
+
         const item = await Cotizaciones_Items.create({
             id_cotizacion,
             id_producto,
@@ -61,6 +72,7 @@ export const agregarItemCotizacion = async (id_cotizacion, id_producto, cantidad
             precio_unitario,
             descuento_porcentaje
         }, { transaction: t });
+        
         // Recalcular totales de la cotización dentro de la misma transacción
         await recalcularTotalesCotizacion(id_cotizacion, t);
         await t.commit();
@@ -141,8 +153,7 @@ export const obtenerCotizacion = async (id_cotizacion) => {
             include: [
                 {
                     model: Cotizaciones_Items,
-                    as: 'items', // Usar alias si se define en las asociaciones
-                    include: [{ model: Producto, as: 'producto' }]
+                    include: [{ model: Producto }]
                 }
             ]
         });
@@ -151,6 +162,7 @@ export const obtenerCotizacion = async (id_cotizacion) => {
         throw new Error(`Error al obtener cotización: ${error.message}`);
     }
 };
+
 /**
  * Listar cotizaciones (con filtros y paginación)
  */
@@ -167,7 +179,7 @@ export const listarCotizaciones = async (options = {}) => {
             include: [
                 {
                     model: Cotizaciones_Items,
-                    as: 'items'
+                    include: [Producto]
                 }
             ],
             order: [['fecha_creacion', 'DESC']],
@@ -217,17 +229,20 @@ export const listarCotizacionesPorCliente = async (id_cliente, estado = null) =>
  * Actualizar cotización (solo en estado borrador)
  */
 export const actualizarCotizacion = async (id_cotizacion, datos) => {
+    const transaction = await sequelize.transaction();
     try {
-        const cotizacion = await Cotizaciones.findByPk(id_cotizacion);
+        const cotizacion = await Cotizaciones.findByPk(id_cotizacion, { transaction });
         if (!cotizacion) {
             throw new Error('Cotización no encontrada');
         }
         if (cotizacion.estado !== 'borrador') {
             throw new Error('Solo se pueden editar cotizaciones en estado borrador');
         }
-        await cotizacion.update(datos);
-        return cotizacion;
+        await cotizacion.update(datos, { transaction });
+        await transaction.commit();
+        return await obtenerCotizacion(id_cotizacion);
     } catch (error) {
+        await transaction.rollback();
         throw new Error(`Error al actualizar cotización: ${error.message}`);
     }
 };
@@ -258,8 +273,9 @@ export const eliminarItemCotizacion = async (id_cotizacion_item) => {
  * Enviar cotización (cambiar estado a enviada)
  */
 export const enviarCotizacion = async (id_cotizacion) => {
+    const transaction = await sequelize.transaction();
     try {
-        const cotizacion = await Cotizaciones.findByPk(id_cotizacion);
+        const cotizacion = await Cotizaciones.findByPk(id_cotizacion, { transaction });
         
         if (!cotizacion) {
             throw new Error('Cotización no encontrada');
@@ -271,10 +287,12 @@ export const enviarCotizacion = async (id_cotizacion) => {
         
         await cotizacion.update({
             estado: 'enviada'
-        });
+        }, { transaction });
         
-        return cotizacion;
+        await transaction.commit();
+        return await obtenerCotizacion(id_cotizacion);
     } catch (error) {
+        await transaction.rollback();
         throw new Error(`Error al enviar cotización: ${error.message}`);
     }
 };
@@ -283,8 +301,9 @@ export const enviarCotizacion = async (id_cotizacion) => {
  * Aceptar cotización
  */
 export const aceptarCotizacion = async (id_cotizacion) => {
+    const transaction = await sequelize.transaction();
     try {
-        const cotizacion = await Cotizaciones.findByPk(id_cotizacion);
+        const cotizacion = await Cotizaciones.findByPk(id_cotizacion, { transaction });
         
         if (!cotizacion) {
             throw new Error('Cotización no encontrada');
@@ -296,10 +315,12 @@ export const aceptarCotizacion = async (id_cotizacion) => {
         
         await cotizacion.update({
             estado: 'aceptada'
-        });
+        }, { transaction });
         
-        return cotizacion;
+        await transaction.commit();
+        return await obtenerCotizacion(id_cotizacion);
     } catch (error) {
+        await transaction.rollback();
         throw new Error(`Error al aceptar cotización: ${error.message}`);
     }
 };
@@ -308,8 +329,9 @@ export const aceptarCotizacion = async (id_cotizacion) => {
  * Rechazar cotización
  */
 export const rechazarCotizacion = async (id_cotizacion) => {
+    const transaction = await sequelize.transaction();
     try {
-        const cotizacion = await Cotizaciones.findByPk(id_cotizacion);
+        const cotizacion = await Cotizaciones.findByPk(id_cotizacion, { transaction });
         
         if (!cotizacion) {
             throw new Error('Cotización no encontrada');
@@ -321,10 +343,12 @@ export const rechazarCotizacion = async (id_cotizacion) => {
         
         await cotizacion.update({
             estado: 'rechazada'
-        });
+        }, { transaction });
         
-        return cotizacion;
+        await transaction.commit();
+        return await obtenerCotizacion(id_cotizacion);
     } catch (error) {
+        await transaction.rollback();
         throw new Error(`Error al rechazar cotización: ${error.message}`);
     }
 };
@@ -333,8 +357,9 @@ export const rechazarCotizacion = async (id_cotizacion) => {
  * Convertir cotización aceptada a orden
  */
 export const convertirCotizacionAOrden = async (id_cotizacion, id_orden) => {
+    const transaction = await sequelize.transaction();
     try {
-        const cotizacion = await Cotizaciones.findByPk(id_cotizacion);
+        const cotizacion = await Cotizaciones.findByPk(id_cotizacion, { transaction });
         
         if (!cotizacion) {
             throw new Error('Cotización no encontrada');
@@ -348,11 +373,12 @@ export const convertirCotizacionAOrden = async (id_cotizacion, id_orden) => {
         const conversion = await Cotizaciones_Ordenes.create({
             id_cotizacion,
             id_orden
-        });
+        }, { transaction });
         
-        // Cambiar estado a aceptada (ya está, pero lo dejamos para claridad)
+        await transaction.commit();
         return conversion;
     } catch (error) {
+        await transaction.rollback();
         throw new Error(`Error al convertir cotización: ${error.message}`);
     }
 };
@@ -394,7 +420,8 @@ export const obtenerCotizacionesPorFecha = async (fecha_inicio, fecha_fin) => {
             },
             include: [
                 {
-                    model: Cotizaciones_Items
+                    model: Cotizaciones_Items,
+                    include: [Producto]
                 }
             ],
             order: [['fecha_creacion', 'DESC']]
@@ -429,26 +456,33 @@ export const generarReporteCotizaciones = async (filtros = {}) => {
         
         const cotizaciones = await Cotizaciones.findAll({
             where,
-            attributes: [
-                'id_cotizacion',
-                'numero_cotizacion',
-                'estado',
-                'fecha_creacion',
-                'subtotal',
-                'impuestos',
-                'total'
+            include: [
+                {
+                    model: Cotizaciones_Items,
+                    include: [Producto]
+                }
             ],
-            raw: true
+            order: [['fecha_creacion', 'DESC']]
         });
         
         const totalCotizaciones = cotizaciones.length;
         const sumaTotal = cotizaciones.reduce((sum, cot) => sum + parseFloat(cot.total || 0), 0);
         const promedioTotal = totalCotizaciones > 0 ? sumaTotal / totalCotizaciones : 0;
         
+        // Estadísticas por estado
+        const estadisticasEstado = {};
+        cotizaciones.forEach(cot => {
+            if (!estadisticasEstado[cot.estado]) {
+                estadisticasEstado[cot.estado] = 0;
+            }
+            estadisticasEstado[cot.estado]++;
+        });
+        
         return {
             totalCotizaciones,
             sumaTotal,
             promedioTotal,
+            estadisticasEstado,
             cotizaciones
         };
     } catch (error) {
