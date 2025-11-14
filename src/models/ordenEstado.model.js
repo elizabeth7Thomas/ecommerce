@@ -51,7 +51,7 @@ const OrdenEstado = sequelize.define('OrdenEstado', {
         defaultValue: true,
     },
 }, {
-    tableName: 'Orden_Estados',
+    tableName: 'orden_estados',
     timestamps: true,
     createdAt: 'fecha_creacion',
     updatedAt: 'fecha_actualizacion',

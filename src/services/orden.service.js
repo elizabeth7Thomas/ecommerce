@@ -12,6 +12,16 @@ import {
 
 class OrdenService {
     /**
+     * Genera número de orden único
+     */
+    async generarNumeroOrden() {
+        const timestamp = new Date();
+        const year = timestamp.getFullYear();
+        const count = await Orden.count();
+        return `ORD-${year}-${String(count + 1).padStart(5, '0')}`;
+    }
+
+    /**
      * Crea una orden a partir del carrito activo de un cliente.
      */
     async createOrderFromCart(idCliente, idDireccionEnvio, notas_orden) {
@@ -33,7 +43,10 @@ class OrdenService {
             }
 
             // 2. Verificar que la dirección de envío pertenece al cliente
-            const direccion = await Direccion.findOne({ where: { id_direccion: idDireccionEnvio, id_cliente: idCliente }, transaction: t });
+            const direccion = await Direccion.findOne({ 
+                where: { id_direccion: idDireccionEnvio, id_cliente: idCliente }, 
+                transaction: t 
+            });
             if (!direccion) {
                 throw new Error('La dirección de envío no es válida o no pertenece al cliente.');
             }
@@ -44,16 +57,20 @@ class OrdenService {
                 return total + (Number(item.cantidad) * precio);
             }, 0);
 
-            // 4. Crear la orden
+            // 4. Generar número de orden único
+            const numero_orden = await this.generarNumeroOrden();
+
+            // 5. Crear la orden
             const nuevaOrden = await Orden.create({
                 id_cliente: idCliente,
                 id_direccion_envio: idDireccionEnvio,
                 total_orden,
                 estado_orden: 'pendiente',
+                numero_orden,
                 notas_orden,
             }, { transaction: t });
 
-            // 5. Mover productos del carrito a Ordenes_Items y actualizar stock
+            // 6. Mover productos del carrito a Ordenes_Items y actualizar stock
             for (const item of carrito.productosCarrito) {
                 const producto = item.producto;
 
@@ -70,19 +87,27 @@ class OrdenService {
                 }, { transaction: t });
 
                 // Actualizar stock del producto
-                producto.stock = Number(producto.stock) - Number(item.cantidad);
-                await producto.save({ transaction: t });
+                await Producto.decrement('stock', {
+                    by: Number(item.cantidad),
+                    where: { id_producto: item.id_producto },
+                    transaction: t,
+                });
             }
 
-            // 6. Marcar el carrito como 'convertido'
-            carrito.estado = 'convertido';
-            await carrito.save({ transaction: t });
+            // 7. Marcar el carrito como 'convertido'
+            await CarritoCompras.update(
+                { estado: 'convertido' },
+                { 
+                    where: { id_carrito: carrito.id_carrito },
+                    transaction: t 
+                }
+            );
 
             await t.commit();
             return nuevaOrden;
         } catch (error) {
             await t.rollback();
-            throw error; // Re-lanzar el error para que el controlador lo maneje
+            throw error;
         }
     }
 
@@ -92,7 +117,15 @@ class OrdenService {
     async getAllOrders() {
         return Orden.findAll({
             include: [
-                { model: Cliente, as: 'cliente', include: [{ model: Usuario, as: 'usuario' }] }
+                { 
+                    model: Cliente, 
+                    as: 'cliente', 
+                    include: [{ 
+                        model: Usuario, 
+                        as: 'usuario',
+                        attributes: ['nombre_usuario', 'correo_electronico']
+                    }] 
+                }
             ],
             order: [['fecha_orden', 'DESC']],
         });
@@ -104,6 +137,17 @@ class OrdenService {
     async getOrdersByClientId(idCliente) {
         return Orden.findAll({
             where: { id_cliente: idCliente },
+            include: [
+                {
+                    model: OrdenItem,
+                    as: 'items',
+                    include: [{
+                        model: Producto,
+                        as: 'producto',
+                        attributes: ['nombre_producto', 'precio']
+                    }]
+                }
+            ],
             order: [['fecha_orden', 'DESC']],
         });
     }
@@ -114,9 +158,28 @@ class OrdenService {
     async getOrderDetailsById(id_orden) {
         const orden = await Orden.findByPk(id_orden, {
             include: [
-                { model: Cliente, as: 'cliente', include: [{ model: Usuario, as: 'usuario', attributes: ['nombre_usuario', 'correo_electronico'] }] },
-                { model: Direccion, as: 'direccionEnvio' },
-                { model: OrdenItem, as: 'items', include: [{ model: Producto, as: 'producto', attributes: ['nombre_producto', 'precio'] }] }
+                { 
+                    model: Cliente, 
+                    as: 'cliente', 
+                    include: [{ 
+                        model: Usuario, 
+                        as: 'usuario', 
+                        attributes: ['nombre_usuario', 'correo_electronico'] 
+                    }] 
+                },
+                { 
+                    model: Direccion, 
+                    as: 'direccionEnvio' 
+                },
+                { 
+                    model: OrdenItem, 
+                    as: 'items', 
+                    include: [{ 
+                        model: Producto, 
+                        as: 'producto', 
+                        attributes: ['nombre_producto', 'precio', 'imagen_url'] 
+                    }] 
+                }
             ]
         });
         if (!orden) {
@@ -137,10 +200,13 @@ class OrdenService {
             }
 
             // Lógica de cancelación: reponer el stock
-            if (nuevo_estado === 'cancelado' && orden.estado_orden !== 'cancelado') {
-                const items = await OrdenItem.findAll({ where: { id_orden }, transaction: t });
+            if (nuevo_estado === 'cancelada' && orden.estado_orden !== 'cancelada') {
+                const items = await OrdenItem.findAll({ 
+                    where: { id_orden }, 
+                    transaction: t 
+                });
+                
                 for (const item of items) {
-                    // Usar increment para evitar condiciones de carrera
                     await Producto.increment('stock', {
                         by: Number(item.cantidad),
                         where: { id_producto: item.id_producto },
@@ -149,11 +215,42 @@ class OrdenService {
                 }
             }
 
-            orden.estado_orden = nuevo_estado;
-            await orden.save({ transaction: t });
+            // Actualizar estado y fecha de cambio
+            await orden.update({
+                estado_orden: nuevo_estado,
+                fecha_estado_cambio: new Date()
+            }, { transaction: t });
 
             await t.commit();
             return orden;
+        } catch (error) {
+            await t.rollback();
+            throw error;
+        }
+    }
+
+    /**
+     * Elimina una orden de la base de datos.
+     */
+    async deleteOrder(id_orden) {
+        const t = await sequelize.transaction();
+        try {
+            const orden = await Orden.findByPk(id_orden, { transaction: t });
+            if (!orden) {
+                throw new Error('Orden no encontrada');
+            }
+            
+            // Eliminar items de la orden primero
+            await OrdenItem.destroy({ 
+                where: { id_orden }, 
+                transaction: t 
+            });
+            
+            // Eliminar la orden
+            await orden.destroy({ transaction: t });
+
+            await t.commit();
+            return true;
         } catch (error) {
             await t.rollback();
             throw error;

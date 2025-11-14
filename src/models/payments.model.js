@@ -11,17 +11,17 @@ const Payment = sequelize.define('Payment', {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-    // 1. Quitar la columna antigua y obsoleta
-    // metodo_pago: { ... },
-
-    // 2. Añadir las nuevas llaves foráneas que la reemplazan
     id_metodo_pago: {
         type: DataTypes.INTEGER,
-        allowNull: true, // Puede ser nulo si se usa id_metodo_pago_cliente
+        allowNull: true,
     },
     id_metodo_pago_cliente: {
         type: DataTypes.INTEGER,
-        allowNull: true, // Puede ser nulo si es un pago único
+        allowNull: true,
+    },
+    metodo_pago: {
+        type: DataTypes.STRING(50),
+        allowNull: true, // Mantener por compatibilidad durante migración
     },
     monto: {
         type: DataTypes.DECIMAL(10, 2),
@@ -32,6 +32,9 @@ const Payment = sequelize.define('Payment', {
         type: DataTypes.STRING(50),
         allowNull: false,
         defaultValue: 'pendiente',
+        validate: {
+            isIn: [['pendiente', 'procesando', 'completado', 'fallido', 'reembolsado', 'cancelado']]
+        }
     },
     fecha_pago: {
         type: DataTypes.DATE,
@@ -43,7 +46,6 @@ const Payment = sequelize.define('Payment', {
     detalles_pago: {
         type: DataTypes.TEXT,
     },
-    // 3. Añadir el resto de las nuevas columnas de la migración
     codigo_autorizacion: {
         type: DataTypes.STRING(100),
     },
@@ -61,9 +63,8 @@ const Payment = sequelize.define('Payment', {
         type: DataTypes.JSONB,
     },
 }, {
-    // 4. Ajustar el nombre para que coincida exactamente
     tableName: 'payments',
-    timestamps: false, // Correcto, esta tabla no tiene timestamps de auditoría
+    timestamps: false,
 });
 
 export default Payment;

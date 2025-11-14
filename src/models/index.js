@@ -46,11 +46,15 @@ import Politicas_Devolucion from './politicasDevolucion.model.js';
 
 // Associations con opciones mejoradas
 const setupAssociations = () => {
+  // ==========================================
+  // ASOCIACIONES BÁSICAS DEL SISTEMA
+  // ==========================================
+
   // Rol -> Usuario (1:N)
   Rol.hasMany(Usuario, { 
     foreignKey: 'id_rol',
     as: 'usuarios',
-    onDelete: 'RESTRICT' // No eliminar rol si tiene usuarios
+    onDelete: 'RESTRICT'
   });
   Usuario.belongsTo(Rol, { 
     foreignKey: 'id_rol',
@@ -101,7 +105,11 @@ const setupAssociations = () => {
     as: 'producto'
   });
 
-  // Cliente -> CarritoCompras (1:N) - Un cliente puede tener múltiples carritos (histórico)
+  // ==========================================
+  // ASOCIACIONES DE CARRITO Y ÓRDENES
+  // ==========================================
+
+  // Cliente -> CarritoCompras (1:N)
   Cliente.hasMany(CarritoCompras, { 
     foreignKey: 'id_cliente',
     as: 'carritos',
@@ -137,7 +145,7 @@ const setupAssociations = () => {
   Cliente.hasMany(Orden, { 
     foreignKey: 'id_cliente',
     as: 'ordenes',
-    onDelete: 'RESTRICT' // No eliminar si tiene órdenes
+    onDelete: 'RESTRICT'
   });
   Orden.belongsTo(Cliente, { 
     foreignKey: 'id_cliente',
@@ -175,6 +183,10 @@ const setupAssociations = () => {
     as: 'producto'
   });
 
+  // ==========================================
+  // ASOCIACIONES DE PAGOS CORREGIDAS
+  // ==========================================
+
   // Orden -> Payments (1:N)
   Orden.hasMany(Payment, { 
     foreignKey: 'id_orden',
@@ -186,75 +198,31 @@ const setupAssociations = () => {
     as: 'orden'
   });
 
-  // ==========================================
-  // RELACIONES DE ESTADOS DE ORDEN
-  // ==========================================
-
-  // OrdenEstado -> Orden (1:N)
-  OrdenEstado.hasMany(Orden, { 
-    foreignKey: 'id_estado_orden',
-    as: 'ordenes'
-  });
-  Orden.belongsTo(OrdenEstado, { 
-    foreignKey: 'id_estado_orden',
-    as: 'estadoActual'
-  });
-
-  // Orden -> OrdenEstadoHistorial (1:N)
-  Orden.hasMany(OrdenEstadoHistorial, { 
-    foreignKey: 'id_orden',
-    as: 'historialEstados',
-    onDelete: 'CASCADE'
-  });
-  OrdenEstadoHistorial.belongsTo(Orden, { 
-    foreignKey: 'id_orden',
-    as: 'orden'
-  });
-
-  // OrdenEstado -> OrdenEstadoHistorial (estado nuevo)
-  OrdenEstado.hasMany(OrdenEstadoHistorial, { 
-    foreignKey: 'id_estado_nuevo',
-    as: 'historialesNuevo'
-  });
-  OrdenEstadoHistorial.belongsTo(OrdenEstado, { 
-    foreignKey: 'id_estado_nuevo',
-    as: 'estadoNuevo'
-  });
-
-  // OrdenEstado -> OrdenEstadoHistorial (estado anterior)
-  OrdenEstado.hasMany(OrdenEstadoHistorial, { 
-    foreignKey: 'id_estado_anterior',
-    as: 'historialesAnterior'
-  });
-  OrdenEstadoHistorial.belongsTo(OrdenEstado, { 
-    foreignKey: 'id_estado_anterior',
-    as: 'estadoAnterior'
-  });
-
-  // Usuario -> OrdenEstadoHistorial (quién hizo el cambio)
-  Usuario.hasMany(OrdenEstadoHistorial, { 
-    foreignKey: 'id_usuario',
-    as: 'cambiosEstadoOrdenes',
-    onDelete: 'SET NULL'
-  });
-  OrdenEstadoHistorial.belongsTo(Usuario, { 
-    foreignKey: 'id_usuario',
-    as: 'usuarioQueHizoCambio'
-  });
-
-  // ==========================================
-  // RELACIONES DE MÉTODOS DE PAGO
-  // ==========================================
-
-  // MetodoPago -> Payment (1:N)
-  MetodoPago.hasMany(Payment, { 
-    foreignKey: 'id_metodo_pago',
-    as: 'pagos'
-  });
-  Payment.belongsTo(MetodoPago, { 
+  // Payment -> MetodoPago
+  Payment.belongsTo(MetodoPago, {
     foreignKey: 'id_metodo_pago',
     as: 'metodoPago'
   });
+  
+  MetodoPago.hasMany(Payment, {
+    foreignKey: 'id_metodo_pago',
+    as: 'pagos'
+  });
+
+  // Payment -> MetodoPagoCliente
+  Payment.belongsTo(MetodoPagoCliente, {
+    foreignKey: 'id_metodo_pago_cliente',
+    as: 'metodoPagoCliente'
+  });
+  
+  MetodoPagoCliente.hasMany(Payment, {
+    foreignKey: 'id_metodo_pago_cliente',
+    as: 'pagos'
+  });
+
+  // ==========================================
+  // ASOCIACIONES DE MÉTODOS DE PAGO CORREGIDAS
+  // ==========================================
 
   // Cliente -> MetodoPagoCliente (1:N)
   Cliente.hasMany(MetodoPagoCliente, { 
@@ -270,21 +238,70 @@ const setupAssociations = () => {
   // MetodoPago -> MetodoPagoCliente (1:N)
   MetodoPago.hasMany(MetodoPagoCliente, { 
     foreignKey: 'id_metodo_pago',
-    as: 'clientesConEsteMetodo'
+    as: 'clientesMetodos'
   });
   MetodoPagoCliente.belongsTo(MetodoPago, { 
     foreignKey: 'id_metodo_pago',
     as: 'metodoPago'
   });
 
-  // MetodoPagoCliente -> Payment (1:N)
-  MetodoPagoCliente.hasMany(Payment, { 
-    foreignKey: 'id_metodo_pago_cliente',
-    as: 'pagos'
+  // ==========================================
+  // ASOCIACIONES DE ESTADOS DE ORDEN CORREGIDAS
+  // ==========================================
+
+  // Orden -> OrdenEstado
+  Orden.belongsTo(OrdenEstado, {
+    foreignKey: 'id_estado_orden',
+    as: 'estadoOrden'
   });
-  Payment.belongsTo(MetodoPagoCliente, { 
-    foreignKey: 'id_metodo_pago_cliente',
-    as: 'metodoPagoCliente'
+  
+  OrdenEstado.hasMany(Orden, {
+    foreignKey: 'id_estado_orden',
+    as: 'ordenes'
+  });
+
+  // Orden -> OrdenEstadoHistorial (1:N)
+  Orden.hasMany(OrdenEstadoHistorial, { 
+    foreignKey: 'id_orden',
+    as: 'historialEstados',
+    onDelete: 'CASCADE'
+  });
+  OrdenEstadoHistorial.belongsTo(Orden, { 
+    foreignKey: 'id_orden',
+    as: 'orden'
+  });
+
+  // OrdenEstadoHistorial -> OrdenEstado (estado anterior)
+  OrdenEstadoHistorial.belongsTo(OrdenEstado, {
+    foreignKey: 'id_estado_anterior',
+    as: 'estadoAnterior'
+  });
+  
+  OrdenEstado.hasMany(OrdenEstadoHistorial, {
+    foreignKey: 'id_estado_anterior',
+    as: 'historialesComoAnterior'
+  });
+
+  // OrdenEstadoHistorial -> OrdenEstado (estado nuevo)
+  OrdenEstadoHistorial.belongsTo(OrdenEstado, {
+    foreignKey: 'id_estado_nuevo',
+    as: 'estadoNuevo'
+  });
+  
+  OrdenEstado.hasMany(OrdenEstadoHistorial, {
+    foreignKey: 'id_estado_nuevo',
+    as: 'historialesComoNuevo'
+  });
+
+  // OrdenEstadoHistorial -> Usuario
+  OrdenEstadoHistorial.belongsTo(Usuario, {
+    foreignKey: 'id_usuario',
+    as: 'usuario'
+  });
+  
+  Usuario.hasMany(OrdenEstadoHistorial, {
+    foreignKey: 'id_usuario',
+    as: 'cambiosEstado'
   });
 
   // ==========================================
@@ -643,6 +660,16 @@ const setupAssociations = () => {
     as: 'devolucion'
   });
 
+  // OrdenItem -> Devoluciones_Items (1:N)
+  OrdenItem.hasMany(Devoluciones_Items, { 
+    foreignKey: 'id_orden_item',
+    as: 'devolucionesItems'
+  });
+  Devoluciones_Items.belongsTo(OrdenItem, { 
+    foreignKey: 'id_orden_item',
+    as: 'ordenItem'
+  });
+
   // Producto -> Devoluciones_Items (1:N)
   Producto.hasMany(Devoluciones_Items, { 
     foreignKey: 'id_producto',
@@ -654,15 +681,26 @@ const setupAssociations = () => {
     as: 'producto'
   });
 
-  // Devoluciones -> Reembolsos (1:N)
-  Devoluciones.hasMany(Reembolsos, { 
+  // Devoluciones -> Reembolsos (1:1)
+  Devoluciones.hasOne(Reembolsos, { 
     foreignKey: 'id_devolucion',
-    as: 'reembolsos',
+    as: 'reembolso',
     onDelete: 'CASCADE'
   });
   Reembolsos.belongsTo(Devoluciones, { 
     foreignKey: 'id_devolucion',
     as: 'devolucion'
+  });
+
+  // MetodoPago -> Reembolsos (1:N)
+  MetodoPago.hasMany(Reembolsos, { 
+    foreignKey: 'id_metodo_pago',
+    as: 'reembolsos',
+    onDelete: 'RESTRICT'
+  });
+  Reembolsos.belongsTo(MetodoPago, { 
+    foreignKey: 'id_metodo_pago',
+    as: 'metodoPago'
   });
 
   // Usuario -> Reembolsos (quien aprobó)
@@ -680,6 +718,7 @@ const setupAssociations = () => {
 // Ejecutar las asociaciones
 setupAssociations();
 
+// Export individual
 export {
     sequelize,
     Rol,
@@ -718,9 +757,15 @@ export {
     Cotizaciones,
     Cotizaciones_Items,
     Cotizaciones_Ordenes,
+    // Devoluciones Models
+    Devoluciones,
+    Devoluciones_Items,
+    Reembolsos,
+    Politicas_Devolucion,
     setupAssociations
 };
 
+// Export default
 export default {
     sequelize,
     Rol,
@@ -763,5 +808,5 @@ export default {
     Devoluciones,
     Devoluciones_Items,
     Reembolsos,
-    Politicas_Devolucion,
+    Politicas_Devolucion
 };

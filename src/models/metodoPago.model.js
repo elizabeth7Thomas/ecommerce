@@ -13,8 +13,11 @@ const MetodoPago = sequelize.define('MetodoPago', {
         unique: true,
     },
     tipo_metodo: {
-        type: DataTypes.ENUM('tarjeta_credito', 'tarjeta_debito', 'transferencia_bancaria', 'billetera_digital', 'efectivo', 'cheque', 'criptomoneda'),
+        type: DataTypes.STRING(50),
         allowNull: false,
+        validate: {
+            isIn: [['tarjeta_credito', 'tarjeta_debito', 'transferencia_bancaria', 'billetera_digital', 'efectivo', 'cheque', 'criptomoneda']]
+        }
     },
     descripcion: {
         type: DataTypes.TEXT,
@@ -56,7 +59,7 @@ const MetodoPago = sequelize.define('MetodoPago', {
         type: DataTypes.JSONB,
     },
 }, {
-    tableName: 'Metodos_Pago',
+    tableName: 'metodos_pago',
     timestamps: true,
     createdAt: 'fecha_creacion',
     updatedAt: 'fecha_actualizacion',

@@ -1,3 +1,5 @@
+// server.js
+import 'dotenv/config';
 import app from './app.js';
 import { config } from './src/config/server.config.js';
 import sequelize from './src/config/database.js';
@@ -23,7 +25,5 @@ async function main() {
         process.exit(1);
     }
 }
-
-main();
 
 main();

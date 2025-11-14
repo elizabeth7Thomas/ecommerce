@@ -7,7 +7,7 @@ class PaymentController {
     async getPaymentsByOrder(req, res) {
         try {
             const { id_orden } = req.params;
-            const { id_usuario, rol } = req;
+            const { id_usuario, nombre_rol } = req; // Cambiado de 'rol' a 'nombre_rol'
 
             // Verificar propiedad de la orden
             const orden = await ordenService.getOrderDetailsById(id_orden);
@@ -15,10 +15,10 @@ class PaymentController {
                 return res.status(404).json(response.notFound('Orden no encontrada'));
             }
 
-            if (rol !== 'administrador') {
+            if (nombre_rol !== 'administrador') {
                 const cliente = await clienteService.getClienteByUsuarioId(id_usuario);
                 if (!cliente || orden.id_cliente !== cliente.id_cliente) {
-                    return res.status(403).json(response.forbidden());
+                    return res.status(403).json(response.forbidden('No tienes permisos para ver los pagos de esta orden'));
                 }
             }
 
@@ -33,7 +33,7 @@ class PaymentController {
     async createPayment(req, res) {
         try {
             const { id_orden } = req.params;
-            const { id_usuario, rol } = req;
+            const { id_usuario, nombre_rol } = req; // Cambiado de 'rol' a 'nombre_rol'
 
             // Verificar que la orden exista y pertenezca al usuario (o sea admin)
             const orden = await ordenService.getOrderDetailsById(id_orden);
@@ -41,14 +41,19 @@ class PaymentController {
                 return res.status(404).json(response.notFound('Orden no encontrada'));
             }
 
-            if (rol !== 'administrador') {
+            if (nombre_rol !== 'administrador') {
                 const cliente = await clienteService.getClienteByUsuarioId(id_usuario);
                 if (!cliente || orden.id_cliente !== cliente.id_cliente) {
-                    return res.status(403).json(response.forbidden());
+                    return res.status(403).json(response.forbidden('No tienes permisos para crear pagos para esta orden'));
                 }
             }
 
-            const paymentData = { ...req.body, id_orden };
+            const paymentData = { 
+                ...req.body, 
+                id_orden,
+                ip_origen: req.ip // Capturar IP del cliente
+            };
+
             const payment = await paymentService.createPayment(paymentData);
             res.status(201).json(response.created(payment, 'Pago creado exitosamente'));
         } catch (error) {
@@ -60,10 +65,21 @@ class PaymentController {
     async getPaymentById(req, res) {
         try {
             const { id } = req.params;
+            const { id_usuario, nombre_rol } = req;
+
             const payment = await paymentService.getPaymentById(id);
             if (!payment) {
                 return res.status(404).json(response.notFound('Pago no encontrado'));
             }
+
+            // Verificar permisos: admin o dueño de la orden
+            if (nombre_rol !== 'administrador') {
+                const cliente = await clienteService.getClienteByUsuarioId(id_usuario);
+                if (!cliente || payment.orden.id_cliente !== cliente.id_cliente) {
+                    return res.status(403).json(response.forbidden('No tienes permisos para ver este pago'));
+                }
+            }
+
             res.status(200).json(response.success(payment));
         } catch (error) {
             const err = response.handleError(error);
@@ -75,9 +91,22 @@ class PaymentController {
         try {
             const { id } = req.params;
             const { estado_pago } = req.body;
+            const { nombre_rol } = req;
+
+            // Solo administradores pueden actualizar estados de pago
+            if (nombre_rol !== 'administrador') {
+                return res.status(403).json(response.forbidden('Solo los administradores pueden actualizar estados de pago'));
+            }
 
             if (!estado_pago) {
                 return res.status(400).json(response.badRequest('estado_pago es requerido'));
+            }
+
+            const estadosValidos = ['pendiente', 'procesando', 'completado', 'fallido', 'reembolsado', 'cancelado'];
+            if (!estadosValidos.includes(estado_pago)) {
+                return res.status(400).json(
+                    response.badRequest(`Estado no válido. Estados permitidos: ${estadosValidos.join(', ')}`)
+                );
             }
 
             const payment = await paymentService.updatePaymentStatus(id, estado_pago);
@@ -90,11 +119,19 @@ class PaymentController {
 
     async getAllPayments(req, res) {
         try {
-            const { page = 1, limit = 10, estado_pago, id_orden, orderBy = 'fecha_pago', order = 'DESC' } = req.query;
-            const { rol } = req;
+            const { 
+                page = 1, 
+                limit = 10, 
+                estado_pago, 
+                id_orden, 
+                orderBy = 'fecha_pago', 
+                order = 'DESC' 
+            } = req.query;
+            
+            const { nombre_rol } = req;
 
             // Solo los admins pueden ver todos los pagos
-            if (rol !== 'administrador') {
+            if (nombre_rol !== 'administrador') {
                 return res.status(403).json(response.forbidden('Solo los administradores pueden ver todos los pagos'));
             }
 
@@ -118,22 +155,11 @@ class PaymentController {
     async deletePayment(req, res) {
         try {
             const { id } = req.params;
-            const { rol } = req;
+            const { nombre_rol } = req;
 
             // Solo los admins pueden eliminar pagos
-            if (rol !== 'administrador') {
+            if (nombre_rol !== 'administrador') {
                 return res.status(403).json(response.forbidden('Solo los administradores pueden eliminar pagos'));
-            }
-
-            // Verificar que el pago exista
-            const payment = await paymentService.getPaymentById(id);
-            if (!payment) {
-                return res.status(404).json(response.notFound('Pago no encontrado'));
-            }
-
-            // Solo se pueden eliminar pagos pendientes
-            if (payment.estado_pago !== 'pendiente') {
-                return res.status(400).json(response.badRequest(`No se puede eliminar un pago en estado ${payment.estado_pago}`));
             }
 
             await paymentService.deletePayment(id);

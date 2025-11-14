@@ -1,3 +1,4 @@
+// En /src/controllers/orden.controller.js
 import ordenService from '../services/orden.service.js';
 import { Cliente } from '../models/index.js';
 import * as response from '../utils/response.js';
@@ -5,64 +6,108 @@ import * as response from '../utils/response.js';
 class OrdenController {
     async createOrder(req, res) {
         try {
-            // El id_usuario viene del token JWT
             const { id_usuario } = req;
             const { id_direccion_envio, notas_orden } = req.body;
 
-            // Encontrar el id_cliente asociado al id_usuario
-            const cliente = await Cliente.findOne({ where: { id_usuario } });
-            if (!cliente) {
-                return res.status(404).json(response.notFound('Perfil de cliente no encontrado'));
+            // Validaciones básicas
+            if (!id_direccion_envio) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'La dirección de envío es requerida'
+                });
             }
 
-            const nuevaOrden = await ordenService.createOrderFromCart(cliente.id_cliente, id_direccion_envio, notas_orden);
-            res.status(201).json(response.created(nuevaOrden, 'Orden creada exitosamente'));
+            // Encontrar el cliente
+            const cliente = await Cliente.findOne({ where: { id_usuario } });
+            if (!cliente) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Perfil de cliente no encontrado'
+                });
+            }
+
+            const nuevaOrden = await ordenService.createOrderFromCart(
+                cliente.id_cliente, 
+                id_direccion_envio, 
+                notas_orden
+            );
+            
+            res.status(201).json({
+                success: true,
+                data: nuevaOrden,
+                message: 'Orden creada exitosamente'
+            });
         } catch (error) {
-            const err = response.handleError(error);
-            res.status(err.statusCode || 400).json(err);
+            console.error('Error creating order:', error);
+            res.status(400).json({
+                success: false,
+                message: error.message
+            });
         }
     }
 
     async getMyOrders(req, res) {
         try {
-            const { id_usuario, rol } = req;
+            const { id_usuario, nombre_rol } = req;
             
-            if (rol === 'administrador') {
-                 const ordenes = await ordenService.getAllOrders();
-                 return res.status(200).json(response.success(ordenes));
+            if (nombre_rol === 'administrador') {
+                const ordenes = await ordenService.getAllOrders();
+                return res.status(200).json({
+                    success: true,
+                    data: ordenes
+                });
             }
             
             const cliente = await Cliente.findOne({ where: { id_usuario } });
             if (!cliente) {
-                return res.status(404).json(response.notFound('Perfil de cliente no encontrado'));
+                return res.status(404).json({
+                    success: false,
+                    message: 'Perfil de cliente no encontrado'
+                });
             }
+            
             const ordenes = await ordenService.getOrdersByClientId(cliente.id_cliente);
-            res.status(200).json(response.success(ordenes));
+            res.status(200).json({
+                success: true,
+                data: ordenes
+            });
         } catch (error) {
-            const err = response.handleError(error);
-            res.status(err.statusCode || 500).json(err);
+            console.error('Error getting orders:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
         }
     }
 
     async getOrderById(req, res) {
         try {
             const { id } = req.params;
-            const { id_usuario, rol } = req;
+            const { id_usuario, nombre_rol } = req;
             
             const orden = await ordenService.getOrderDetailsById(id);
 
-            // Autorización: El usuario es admin o es el dueño de la orden
-            if (rol !== 'administrador') {
-                 const cliente = await Cliente.findOne({ where: { id_usuario } });
-                 if (!cliente || orden.id_cliente !== cliente.id_cliente) {
-                     return res.status(403).json(response.forbidden('No eres el propietario de esta orden'));
-                 }
+            // Verificar permisos
+            if (nombre_rol !== 'administrador') {
+                const cliente = await Cliente.findOne({ where: { id_usuario } });
+                if (!cliente || orden.id_cliente !== cliente.id_cliente) {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'No tienes permisos para ver esta orden'
+                    });
+                }
             }
             
-            res.status(200).json(response.success(orden));
+            res.status(200).json({
+                success: true,
+                data: orden
+            });
         } catch (error) {
-            const err = response.handleError(error);
-            res.status(err.statusCode || 500).json(err);
+            console.error('Error getting order details:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
         }
     }
     
@@ -70,50 +115,68 @@ class OrdenController {
         try {
             const { id } = req.params;
             const { estado_orden } = req.body;
-            if (!estado_orden) {
-                return res.status(400).json(response.badRequest('El campo estado_orden es requerido'));
-            }
             
+            if (!estado_orden) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'El campo estado_orden es requerido'
+                });
+            }
+
             const orden = await ordenService.updateOrderStatus(id, estado_orden);
-            res.status(200).json(response.success(orden, 'Estado de la orden actualizado'));
+            res.status(200).json({
+                success: true,
+                data: orden,
+                message: 'Estado de la orden actualizado'
+            });
         } catch (error) {
-            const err = response.handleError(error);
-            res.status(err.statusCode || 500).json(err);
+            console.error('Error updating order status:', error);
+            res.status(400).json({
+                success: false,
+                message: error.message
+            });
         }
     }
 
     async deleteOrder(req, res) {
         try {
             const { id } = req.params;
-            const { id_usuario, rol } = req;
+            const { id_usuario, nombre_rol } = req;
 
             // Validar que la orden exista
             const orden = await ordenService.getOrderDetailsById(id);
             if (!orden) {
-                return res.status(404).json(response.notFound('Orden no encontrada'));
+                return res.status(404).json({
+                    success: false,
+                    message: 'Orden no encontrada'
+                });
             }
 
-            // Autorización: El usuario es admin o es el dueño de la orden
-            if (rol !== 'administrador') {
+            // Verificar permisos
+            if (nombre_rol !== 'administrador') {
                 const cliente = await Cliente.findOne({ where: { id_usuario } });
                 if (!cliente || orden.id_cliente !== cliente.id_cliente) {
-                    return res.status(403).json(response.forbidden('No eres el propietario de esta orden'));
+                    return res.status(403).json({
+                        success: false,
+                        message: 'No tienes permisos para eliminar esta orden'
+                    });
                 }
             }
 
-            // Solo se pueden eliminar órdenes en ciertos estados
-            const estadosEliminables = ['pendiente', 'cancelada'];
-            if (!estadosEliminables.includes(orden.estado_orden)) {
-                return res.status(400).json(response.badRequest(`No se puede eliminar una orden en estado ${orden.estado_orden}`));
-            }
-
             await ordenService.deleteOrder(id);
-            res.status(200).json(response.success(null, 'Orden eliminada exitosamente'));
+            res.status(200).json({
+                success: true,
+                message: 'Orden eliminada exitosamente'
+            });
         } catch (error) {
-            const err = response.handleError(error);
-            res.status(err.statusCode || 500).json(err);
+            console.error('Error deleting order:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
         }
     }
 }
 
+// Exportar instancia del controlador
 export default new OrdenController();

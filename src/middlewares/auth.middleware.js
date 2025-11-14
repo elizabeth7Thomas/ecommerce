@@ -1,15 +1,18 @@
-
+// En /src/middlewares/auth.middleware.js
 import jwt from 'jsonwebtoken';
-import 'dotenv/config';
+import JWT_CONFIG from '../config/jwt.js';
 
-// Middleware para verificar el token JWT
 export const verifyToken = (req, res, next) => {
     try {
-        // Buscar el token en diferentes lugares
-        const token = req.headers['x-access-token'] || 
-                     req.headers['authorization']?.replace('Bearer ', '') ||
-                     req.headers['token'];
+        // Obtener token de diferentes fuentes
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.startsWith('Bearer ') 
+            ? authHeader.slice(7) 
+            : req.headers['x-access-token'] || 
+              req.headers['token'];
 
+        console.log('🔐 Token recibido:', token ? 'Presente' : 'Faltante');
+        
         if (!token) {
             return res.status(403).json({ 
                 success: false,
@@ -17,24 +20,41 @@ export const verifyToken = (req, res, next) => {
             });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secretkey');
-        
-        // Guardar información del usuario en el request
-        req.id_usuario = decoded.id_usuario;
-        req.id_rol = decoded.id_rol;
-        req.nombre_rol = decoded.nombre_rol;
-        req.userRol = decoded.nombre_rol; // Para compatibilidad
-        
+        // Verificar token
+        const decoded = jwt.verify(token, JWT_CONFIG.SECRET);
+        console.log('✅ Token decodificado:', decoded);
+
+        // Compatibilidad con diferentes estructuras de token
+        req.id_usuario = decoded.id_usuario || decoded.sub || decoded.userId || decoded.user_id;
+        req.id_rol = decoded.id_rol || decoded.rol || decoded.role || decoded.userRole;
+        req.nombre_rol = decoded.nombre_rol || decoded.rol || decoded.role || decoded.userRole;
+        req.userRol = req.nombre_rol;
+
         next();
     } catch (error) {
+        console.error('❌ Error verificando token:', error.message);
+        
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ 
+                success: false,
+                message: 'Token expirado' 
+            });
+        }
+        
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({ 
+                success: false,
+                message: 'Token inválido' 
+            });
+        }
+        
         return res.status(401).json({ 
             success: false,
-            message: 'Token inválido o expirado' 
+            message: 'Error de autenticación' 
         });
     }
 };
 
-// Middleware para verificar si el rol es 'administrador'
 export const isAdmin = (req, res, next) => {
     if (req.nombre_rol === 'administrador' || req.userRol === 'administrador') {
         next();
@@ -55,12 +75,50 @@ export const hasRole = (...allowedRoles) => {
                 message: 'Usuario no autenticado' 
             });
         }
+        
         if (allowedRoles.includes(req.nombre_rol)) {
             next();
         } else {
             return res.status(403).json({ 
                 success: false,
                 message: `Se requiere uno de los siguientes roles: ${allowedRoles.join(', ')}` 
+            });
+        }
+    };
+};
+
+// Middleware para verificar si es el propietario o admin
+export const isOwnerOrAdmin = (req, res, next) => {
+    const { id_usuario, nombre_rol } = req;
+    const targetUserId = parseInt(req.params.id_usuario || req.params.id);
+    
+    if (nombre_rol === 'administrador' || id_usuario === targetUserId) {
+        next();
+        return;
+    }
+    
+    return res.status(403).json({ 
+        success: false,
+        message: 'No tienes permisos para realizar esta acción' 
+    });
+};
+
+// Middleware para verificar permisos específicos
+export const hasPermission = (permission) => {
+    return (req, res, next) => {
+        // Esta función asume que los permisos vienen en req.permisos
+        // Deberías cargar los permisos del usuario durante la autenticación
+        if (req.nombre_rol === 'administrador') {
+            next();
+            return;
+        }
+        
+        if (req.permisos && req.permisos[permission]) {
+            next();
+        } else {
+            return res.status(403).json({ 
+                success: false,
+                message: `Permiso denegado: Se requiere el permiso ${permission}` 
             });
         }
     };

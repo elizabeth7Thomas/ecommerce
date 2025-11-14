@@ -1,7 +1,9 @@
+// En /src/controllers/auth.controller.js
 import userService from '../services/user.service.js';
 import clienteService from '../services/cliente.service.js';
 import rolService from '../services/rol.service.js';
 import jwt from 'jsonwebtoken';
+import JWT_CONFIG from '../config/jwt.js';
 import * as response from '../utils/response.js';
 
 const authController = {
@@ -10,6 +12,16 @@ const authController = {
         try {
             const userData = req.body;
             
+            console.log('📝 Datos recibidos para registro:', userData);
+
+            // Validaciones básicas
+            if (!userData.nombre_usuario || !userData.correo_electronico || !userData.contrasena) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Nombre de usuario, correo electrónico y contraseña son requeridos'
+                });
+            }
+
             // Si se proporciona nombre_rol en lugar de id_rol, obtener el id
             if (userData.nombre_rol && !userData.id_rol) {
                 const rol = await rolService.getRolByNombre(userData.nombre_rol);
@@ -24,7 +36,9 @@ const authController = {
                 userData.id_rol = 2; // cliente
             }
             
+            // Crear usuario
             const newUser = await userService.createUser(userData);
+            console.log('✅ Usuario creado:', newUser.id_usuario);
             
             // Si es un cliente (id_rol: 2), crear el perfil de cliente automáticamente
             let clienteData = null;
@@ -42,13 +56,14 @@ const authController = {
                         apellido: userData.apellido || '',
                         telefono: userData.telefono || null
                     });
+                    console.log('✅ Cliente creado:', clienteData.id_cliente);
                 } catch (clienteError) {
                     // Si falla la creación del cliente, eliminar el usuario
-                    console.error('Error al crear cliente, revertiendo usuario:', clienteError);
+                    console.error('❌ Error al crear cliente, revertiendo usuario:', clienteError);
                     try {
-                        await newUser.destroy();
+                        await userService.deleteUser(newUser.id_usuario);
                     } catch (destroyError) {
-                        console.error('Error al eliminar usuario fallido:', destroyError);
+                        console.error('❌ Error al eliminar usuario fallido:', destroyError);
                     }
                     throw new Error('Error al crear el perfil de cliente. Por favor intenta de nuevo.');
                 }
@@ -56,17 +71,24 @@ const authController = {
             
             // Obtener el rol completo
             const rol = await rolService.getRolById(newUser.id_rol);
+            console.log('✅ Rol obtenido:', rol?.nombre_rol);
 
             // Generar token JWT
+            const tokenPayload = { 
+                id_usuario: newUser.id_usuario, 
+                id_rol: newUser.id_rol,
+                nombre_rol: rol?.nombre_rol || 'cliente'
+            };
+
+            console.log('📦 Payload del token:', tokenPayload);
+
             const token = jwt.sign(
-                { 
-                    id_usuario: newUser.id_usuario, 
-                    id_rol: newUser.id_rol,
-                    nombre_rol: rol?.nombre_rol || 'cliente'
-                },
-                process.env.JWT_SECRET || 'secretkey',
-                { expiresIn: '24h' }
+                tokenPayload,
+                JWT_CONFIG.SECRET,
+                { expiresIn: JWT_CONFIG.EXPIRES_IN }
             );
+
+            console.log('✅ Token generado en register');
 
             const responseData = {
                 id_usuario: newUser.id_usuario,
@@ -78,11 +100,17 @@ const authController = {
                 cliente: clienteData || null
             };
 
-            res.status(201).json(response.created(responseData, 'Usuario y cliente creados exitosamente'));
+            res.status(201).json({
+                success: true,
+                data: responseData,
+                message: 'Usuario y cliente creados exitosamente'
+            });
         } catch (error) {
-            console.error('Error en register:', error);
-            const err = response.handleError(error);
-            res.status(err.statusCode).json(err);
+            console.error('❌ Error en register:', error);
+            res.status(400).json({
+                success: false,
+                message: error.message
+            });
         }
     },
 
@@ -91,35 +119,59 @@ const authController = {
         try {
             const { correo_electronico, contrasena } = req.body;
 
+            console.log('🔐 Intento de login:', { correo_electronico });
+
             if (!correo_electronico || !contrasena) {
-                return res.status(400).json(response.badRequest('Correo electrónico y contraseña son requeridos'));
+                return res.status(400).json({
+                    success: false,
+                    message: 'Correo electrónico y contraseña son requeridos'
+                });
             }
 
             // Buscar usuario por email
             const user = await userService.getUserByEmail(correo_electronico);
             if (!user) {
-                return res.status(401).json(response.unauthorized('Credenciales inválidas'));
+                console.log('❌ Usuario no encontrado:', correo_electronico);
+                return res.status(401).json({
+                    success: false,
+                    message: 'Credenciales inválidas'
+                });
             }
+
+            console.log('✅ Usuario encontrado:', user.id_usuario);
 
             // Verificar contraseña
             const isValidPassword = await user.comparePassword(contrasena);
             if (!isValidPassword) {
-                return res.status(401).json(response.unauthorized('Credenciales inválidas'));
+                console.log('❌ Contraseña incorrecta para usuario:', user.id_usuario);
+                return res.status(401).json({
+                    success: false,
+                    message: 'Credenciales inválidas'
+                });
             }
+
+            console.log('✅ Contraseña válida');
 
             // Obtener el rol completo
             const rol = await rolService.getRolById(user.id_rol);
+            console.log('✅ Rol obtenido:', rol?.nombre_rol);
 
             // Generar token JWT
+            const tokenPayload = { 
+                id_usuario: user.id_usuario, 
+                id_rol: user.id_rol,
+                nombre_rol: rol?.nombre_rol || 'cliente'
+            };
+
+            console.log('📦 Payload del token:', tokenPayload);
+
             const token = jwt.sign(
-                { 
-                    id_usuario: user.id_usuario, 
-                    id_rol: user.id_rol,
-                    nombre_rol: rol?.nombre_rol || 'cliente'
-                },
-                process.env.JWT_SECRET || 'secretkey',
-                { expiresIn: '24h' }
+                tokenPayload,
+                JWT_CONFIG.SECRET,
+                { expiresIn: JWT_CONFIG.EXPIRES_IN }
             );
+
+            console.log('✅ Token generado en login');
 
             const responseData = {
                 id_usuario: user.id_usuario,
@@ -131,40 +183,63 @@ const authController = {
                 token
             };
 
-            res.json(response.success(responseData, 'Login exitoso'));
+            res.json({
+                success: true,
+                data: responseData,
+                message: 'Login exitoso'
+            });
         } catch (error) {
-            console.error('Error en login:', error);
-            const err = response.handleError(error);
-            res.status(err.statusCode || 500).json(err);
+            console.error('❌ Error en login:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
         }
     },
 
     // Obtener perfil del usuario autenticado
     async getProfile(req, res) {
         try {
-            const id_usuario = req.id_usuario; // Viene del middleware verifyToken
+            const id_usuario = req.id_usuario;
+            console.log('👤 Obteniendo perfil para usuario:', id_usuario);
+
             const user = await userService.getUserById(id_usuario);
 
             if (!user) {
-                return res.status(404).json(response.notFound('Usuario no encontrado'));
+                return res.status(404).json({
+                    success: false,
+                    message: 'Usuario no encontrado'
+                });
             }
 
             // Si no viene el rol incluido, obtenerlo
             const rol = user.rol ? user.rol : await rolService.getRolById(user.id_rol);
+
+            // Obtener datos del cliente si existe
+            let clienteData = null;
+            if (user.id_rol === 2) { // Si es cliente
+                clienteData = await clienteService.getClienteByUsuarioId(id_usuario);
+            }
 
             const profileData = {
                 id_usuario: user.id_usuario,
                 nombre_usuario: user.nombre_usuario,
                 correo_electronico: user.correo_electronico,
                 rol: rol,
+                cliente: clienteData,
                 fecha_creacion: user.fecha_creacion
             };
 
-            res.json(response.success(profileData));
+            res.json({
+                success: true,
+                data: profileData
+            });
         } catch (error) {
-            console.error('Error en getProfile:', error);
-            const err = response.handleError(error);
-            res.status(err.statusCode || 500).json(err);
+            console.error('❌ Error en getProfile:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
         }
     },
 
@@ -174,11 +249,25 @@ const authController = {
             const id_usuario = req.id_usuario;
             const updates = req.body;
 
+            console.log('✏️ Actualizando perfil para usuario:', id_usuario, updates);
+
             // No permitir cambiar rol o correo_electronico desde aquí
-            delete updates.rol;
+            delete updates.id_rol;
             delete updates.correo_electronico;
 
             const updatedUser = await userService.updateUser(id_usuario, updates);
+
+            // Si se actualizan datos de cliente
+            if (updates.nombre || updates.apellido || updates.telefono) {
+                const cliente = await clienteService.getClienteByUsuarioId(id_usuario);
+                if (cliente) {
+                    await clienteService.updateCliente(cliente.id_cliente, {
+                        nombre: updates.nombre,
+                        apellido: updates.apellido,
+                        telefono: updates.telefono
+                    });
+                }
+            }
 
             const responseData = {
                 id_usuario: updatedUser.id_usuario,
@@ -186,11 +275,17 @@ const authController = {
                 correo_electronico: updatedUser.correo_electronico
             };
 
-            res.json(response.success(responseData, 'Perfil actualizado exitosamente'));
+            res.json({
+                success: true,
+                data: responseData,
+                message: 'Perfil actualizado exitosamente'
+            });
         } catch (error) {
-            console.error('Error en updateProfile:', error);
-            const err = response.handleError(error);
-            res.status(err.statusCode || 400).json(err);
+            console.error('❌ Error en updateProfile:', error);
+            res.status(400).json({
+                success: false,
+                message: error.message
+            });
         }
     },
 
@@ -200,30 +295,135 @@ const authController = {
             const id_usuario = req.id_usuario;
             const { contrasena_actual, contrasena_nueva } = req.body;
 
+            console.log('🔑 Cambiando contraseña para usuario:', id_usuario);
+
             if (!contrasena_actual || !contrasena_nueva) {
-                return res.status(400).json(response.badRequest('Contraseña actual y nueva contraseña son requeridas'));
+                return res.status(400).json({
+                    success: false,
+                    message: 'Contraseña actual y nueva contraseña son requeridas'
+                });
             }
 
             // Verificar contraseña actual
             const user = await userService.getUserById(id_usuario);
             if (!user) {
-                return res.status(404).json(response.notFound('Usuario no encontrado'));
+                return res.status(404).json({
+                    success: false,
+                    message: 'Usuario no encontrado'
+                });
             }
 
             const isValidPassword = await user.comparePassword(contrasena_actual);
 
             if (!isValidPassword) {
-                return res.status(401).json(response.unauthorized('Contraseña actual incorrecta'));
+                return res.status(401).json({
+                    success: false,
+                    message: 'Contraseña actual incorrecta'
+                });
             }
 
             // Actualizar contraseña
             await userService.updateUser(id_usuario, { contrasena: contrasena_nueva });
 
-            res.json(response.noContent('Contraseña actualizada exitosamente'));
+            console.log('✅ Contraseña actualizada exitosamente');
+
+            res.json({
+                success: true,
+                message: 'Contraseña actualizada exitosamente'
+            });
         } catch (error) {
-            console.error('Error en changePassword:', error);
-            const err = response.handleError(error);
-            res.status(err.statusCode || 500).json(err);
+            console.error('❌ Error en changePassword:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    },
+
+    // Verificar token (endpoint para validar token)
+    async verifyToken(req, res) {
+        try {
+            const id_usuario = req.id_usuario;
+            console.log('✅ Token válido para usuario:', id_usuario);
+
+            const user = await userService.getUserById(id_usuario);
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Usuario no encontrado'
+                });
+            }
+
+            const rol = await rolService.getRolById(user.id_rol);
+
+            res.json({
+                success: true,
+                data: {
+                    id_usuario: user.id_usuario,
+                    nombre_usuario: user.nombre_usuario,
+                    correo_electronico: user.correo_electronico,
+                    id_rol: user.id_rol,
+                    nombre_rol: rol?.nombre_rol || 'cliente',
+                    permisos: rol?.permisos || {}
+                },
+                message: 'Token válido'
+            });
+        } catch (error) {
+            console.error('❌ Error en verifyToken:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    },
+
+    // Refresh token (opcional)
+    async refreshToken(req, res) {
+        try {
+            const id_usuario = req.id_usuario;
+            console.log('🔄 Refrescando token para usuario:', id_usuario);
+
+            const user = await userService.getUserById(id_usuario);
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Usuario no encontrado'
+                });
+            }
+
+            const rol = await rolService.getRolById(user.id_rol);
+
+            // Generar nuevo token
+            const tokenPayload = { 
+                id_usuario: user.id_usuario, 
+                id_rol: user.id_rol,
+                nombre_rol: rol?.nombre_rol || 'cliente'
+            };
+
+            const newToken = jwt.sign(
+                tokenPayload,
+                JWT_CONFIG.SECRET,
+                { expiresIn: JWT_CONFIG.EXPIRES_IN }
+            );
+
+            console.log('✅ Nuevo token generado');
+
+            res.json({
+                success: true,
+                data: {
+                    token: newToken,
+                    id_usuario: user.id_usuario,
+                    nombre_usuario: user.nombre_usuario,
+                    nombre_rol: rol?.nombre_rol || 'cliente'
+                },
+                message: 'Token refrescado exitosamente'
+            });
+        } catch (error) {
+            console.error('❌ Error en refreshToken:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
         }
     }
 };

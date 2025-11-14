@@ -13,6 +13,7 @@ const OrdenEstadoHistorial = sequelize.define('OrdenEstadoHistorial', {
     },
     id_estado_anterior: {
         type: DataTypes.INTEGER,
+        allowNull: true,
     },
     id_estado_nuevo: {
         type: DataTypes.INTEGER,
@@ -20,6 +21,7 @@ const OrdenEstadoHistorial = sequelize.define('OrdenEstadoHistorial', {
     },
     id_usuario: {
         type: DataTypes.INTEGER,
+        allowNull: true,
     },
     comentario: {
         type: DataTypes.TEXT,
@@ -31,7 +33,7 @@ const OrdenEstadoHistorial = sequelize.define('OrdenEstadoHistorial', {
         type: DataTypes.STRING(50),
     },
 }, {
-    tableName: 'Orden_Estado_Historial',
+    tableName: 'orden_estado_historial',
     timestamps: true,
     createdAt: 'fecha_cambio',
     updatedAt: false,
