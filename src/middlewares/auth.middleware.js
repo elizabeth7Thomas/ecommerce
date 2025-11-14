@@ -1,8 +1,9 @@
 // En /src/middlewares/auth.middleware.js
 import jwt from 'jsonwebtoken';
 import JWT_CONFIG from '../config/jwt.js';
+import { Cliente } from '../models/index.js';
 
-export const verifyToken = (req, res, next) => {
+export const verifyToken = async (req, res, next) => {
     try {
         // Obtener token de diferentes fuentes
         const authHeader = req.headers['authorization'];
@@ -24,11 +25,40 @@ export const verifyToken = (req, res, next) => {
         const decoded = jwt.verify(token, JWT_CONFIG.SECRET);
         console.log('✅ Token decodificado:', decoded);
 
-        // Compatibilidad con diferentes estructuras de token
-        req.id_usuario = decoded.id_usuario || decoded.sub || decoded.userId || decoded.user_id;
-        req.id_rol = decoded.id_rol || decoded.rol || decoded.role || decoded.userRole;
-        req.nombre_rol = decoded.nombre_rol || decoded.rol || decoded.role || decoded.userRole;
-        req.userRol = req.nombre_rol;
+        // Crear objeto user con datos del token
+        const user = {
+            id_usuario: decoded.id_usuario || decoded.sub || decoded.userId || decoded.user_id,
+            id_rol: decoded.id_rol || decoded.rol || decoded.role || decoded.userRole,
+            nombre_rol: decoded.nombre_rol || decoded.rol || decoded.role || decoded.userRole
+        };
+
+        // Si es cliente, obtener id_cliente automáticamente
+        if (user.nombre_rol === 'cliente') {
+            try {
+                const cliente = await Cliente.findOne({
+                    where: { id_usuario: user.id_usuario },
+                    attributes: ['id_cliente']
+                });
+                
+                if (cliente) {
+                    user.id_cliente = cliente.id_cliente;
+                } else {
+                    console.warn(`⚠️ Usuario ${user.id_usuario} con rol cliente no tiene perfil de cliente`);
+                }
+            } catch (error) {
+                console.error('❌ Error al obtener id_cliente:', error.message);
+                // No bloqueamos la ejecución, solo loggeamos el error
+            }
+        }
+
+        // Asignar user al request
+        req.user = user;
+        
+        // Mantener compatibilidad con código existente
+        req.id_usuario = user.id_usuario;
+        req.id_rol = user.id_rol;
+        req.nombre_rol = user.nombre_rol;
+        req.userRol = user.nombre_rol;
 
         next();
     } catch (error) {
