@@ -15,6 +15,8 @@ import cotizacionesOrdenesRoutes from './cotizacionesOrdenes.routes.js';
 import devolucionesRoutes from './devoluciones.routes.js';
 import proveedoresRoutes from './proveedores.routes.js';
 import almacenesRoutes from './almacenes.routes.js';
+import metodoPagoRoutes from './metodoPago.routes.js';
+import metodoPagoClienteRoutes from './metodoPagoCliente.routes.js';
 
 const router = Router();
 
@@ -64,6 +66,10 @@ const router = Router();
  *     description: Gestión de conversiones de cotizaciones a órdenes
  *   - name: Devoluciones
  *     description: Gestión de devoluciones y reembolsos de órdenes
+ *   - name: Métodos de Pago
+ *     description: Gestión de métodos de pago del sistema
+ *   - name: Métodos de Pago Cliente
+ *     description: Gestión de métodos de pago de los clientes
  */
 
 // Montar todas las rutas
@@ -83,5 +89,7 @@ router.use('/cotizaciones-items', cotizacionesItemsRoutes);
 router.use('/cotizaciones-ordenes', cotizacionesOrdenesRoutes);
 router.use('/devoluciones', devolucionesRoutes);
 router.use('/proveedores', proveedoresRoutes);
+router.use('/metodos-pago', metodoPagoRoutes);
+router.use('/metodos-pago-cliente', metodoPagoClienteRoutes);
 
 export default router;
