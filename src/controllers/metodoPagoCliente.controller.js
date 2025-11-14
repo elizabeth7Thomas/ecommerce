@@ -2,10 +2,19 @@ import metodoPagoClienteService from '../services/metodoPagoCliente.service.js';
 import * as response from '../utils/response.js';
 
 class MetodoPagoClienteController {
+  
   async createMetodoPagoCliente(req, res) {
     try {
-      const idCliente = req.user.id_cliente; // Obtenido del middleware de autenticación
-      const metodoPagoCliente = await metodoPagoClienteService.createMetodoPagoCliente(req.body, idCliente);
+      // Verificar que el usuario tiene perfil de cliente
+      if (!req.user.id_cliente) {
+        return res.status(400).json({
+          success: false,
+          message: 'El usuario no tiene un perfil de cliente asociado',
+          code: 'CLIENTE_REQUERIDO'
+        });
+      }
+
+      const metodoPagoCliente = await metodoPagoClienteService.createMetodoPagoCliente(req.body, req.user.id_cliente);
       res.status(201).json(response.created(metodoPagoCliente, 'Método de pago agregado exitosamente'));
     } catch (error) {
       const err = response.handleError(error);
@@ -15,7 +24,15 @@ class MetodoPagoClienteController {
 
   async getMetodosPagoByCliente(req, res) {
     try {
-      const idCliente = req.user.id_cliente; // Obtenido del middleware de autenticación
+      // Verificar que el usuario tiene perfil de cliente
+      if (!req.user.id_cliente) {
+        return res.status(400).json({
+          success: false,
+          message: 'El usuario no tiene un perfil de cliente asociado',
+          code: 'CLIENTE_REQUERIDO'
+        });
+      }
+
       const { activo, verificado, es_predeterminado } = req.query;
       
       const options = {
@@ -24,7 +41,7 @@ class MetodoPagoClienteController {
         es_predeterminado: es_predeterminado !== undefined ? es_predeterminado === 'true' : undefined
       };
 
-      const metodosPago = await metodoPagoClienteService.getMetodosPagoByCliente(idCliente, options);
+      const metodosPago = await metodoPagoClienteService.getMetodosPagoByCliente(req.user.id_cliente, options);
       res.status(200).json(response.success(metodosPago));
     } catch (error) {
       const err = response.handleError(error);
@@ -34,13 +51,20 @@ class MetodoPagoClienteController {
 
   async getMetodoPagoClienteById(req, res) {
     try {
+      // Verificar que el usuario tiene perfil de cliente
+      if (!req.user.id_cliente) {
+        return res.status(400).json({
+          success: false,
+          message: 'El usuario no tiene un perfil de cliente asociado',
+          code: 'CLIENTE_REQUERIDO'
+        });
+      }
+
       const { id } = req.params;
-      const idCliente = req.user.id_cliente;
-      
       const metodoPagoCliente = await metodoPagoClienteService.getMetodoPagoClienteById(id);
       
       // Verificar que el método de pago pertenece al cliente autenticado
-      if (metodoPagoCliente.id_cliente !== idCliente) {
+      if (metodoPagoCliente.id_cliente !== req.user.id_cliente) {
         return res.status(403).json(response.forbidden('No tienes acceso a este método de pago'));
       }
 
@@ -53,9 +77,17 @@ class MetodoPagoClienteController {
 
   async updateMetodoPagoCliente(req, res) {
     try {
+      // Verificar que el usuario tiene perfil de cliente
+      if (!req.user.id_cliente) {
+        return res.status(400).json({
+          success: false,
+          message: 'El usuario no tiene un perfil de cliente asociado',
+          code: 'CLIENTE_REQUERIDO'
+        });
+      }
+
       const { id } = req.params;
-      const idCliente = req.user.id_cliente;
-      const metodoPagoCliente = await metodoPagoClienteService.updateMetodoPagoCliente(id, req.body, idCliente);
+      const metodoPagoCliente = await metodoPagoClienteService.updateMetodoPagoCliente(id, req.body, req.user.id_cliente);
       res.status(200).json(response.success(metodoPagoCliente, 'Método de pago actualizado exitosamente'));
     } catch (error) {
       const err = response.handleError(error);
@@ -65,9 +97,17 @@ class MetodoPagoClienteController {
 
   async deleteMetodoPagoCliente(req, res) {
     try {
+      // Verificar que el usuario tiene perfil de cliente
+      if (!req.user.id_cliente) {
+        return res.status(400).json({
+          success: false,
+          message: 'El usuario no tiene un perfil de cliente asociado',
+          code: 'CLIENTE_REQUERIDO'
+        });
+      }
+
       const { id } = req.params;
-      const idCliente = req.user.id_cliente;
-      await metodoPagoClienteService.deleteMetodoPagoCliente(id, idCliente);
+      await metodoPagoClienteService.deleteMetodoPagoCliente(id, req.user.id_cliente);
       res.status(200).json(response.success(null, 'Método de pago eliminado exitosamente'));
     } catch (error) {
       const err = response.handleError(error);
@@ -77,8 +117,16 @@ class MetodoPagoClienteController {
 
   async getDefaultMetodoPago(req, res) {
     try {
-      const idCliente = req.user.id_cliente;
-      const metodoPago = await metodoPagoClienteService.getDefaultMetodoPago(idCliente);
+      // Verificar que el usuario tiene perfil de cliente
+      if (!req.user.id_cliente) {
+        return res.status(400).json({
+          success: false,
+          message: 'El usuario no tiene un perfil de cliente asociado',
+          code: 'CLIENTE_REQUERIDO'
+        });
+      }
+
+      const metodoPago = await metodoPagoClienteService.getDefaultMetodoPago(req.user.id_cliente);
       
       if (!metodoPago) {
         return res.status(404).json(response.notFound('No tienes un método de pago predeterminado configurado'));
@@ -93,9 +141,17 @@ class MetodoPagoClienteController {
 
   async setAsDefault(req, res) {
     try {
+      // Verificar que el usuario tiene perfil de cliente
+      if (!req.user.id_cliente) {
+        return res.status(400).json({
+          success: false,
+          message: 'El usuario no tiene un perfil de cliente asociado',
+          code: 'CLIENTE_REQUERIDO'
+        });
+      }
+
       const { id } = req.params;
-      const idCliente = req.user.id_cliente;
-      const metodoPagoCliente = await metodoPagoClienteService.setAsDefault(id, idCliente);
+      const metodoPagoCliente = await metodoPagoClienteService.setAsDefault(id, req.user.id_cliente);
       res.status(200).json(response.success(metodoPagoCliente, 'Método de pago establecido como predeterminado'));
     } catch (error) {
       const err = response.handleError(error);
@@ -105,9 +161,17 @@ class MetodoPagoClienteController {
 
   async verifyMetodoPago(req, res) {
     try {
+      // Verificar que el usuario tiene perfil de cliente
+      if (!req.user.id_cliente) {
+        return res.status(400).json({
+          success: false,
+          message: 'El usuario no tiene un perfil de cliente asociado',
+          code: 'CLIENTE_REQUERIDO'
+        });
+      }
+
       const { id } = req.params;
-      const idCliente = req.user.id_cliente;
-      const metodoPagoCliente = await metodoPagoClienteService.verifyMetodoPago(id, idCliente);
+      const metodoPagoCliente = await metodoPagoClienteService.verifyMetodoPago(id, req.user.id_cliente);
       res.status(200).json(response.success(metodoPagoCliente, 'Método de pago verificado exitosamente'));
     } catch (error) {
       const err = response.handleError(error);

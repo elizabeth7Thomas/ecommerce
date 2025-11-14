@@ -67,7 +67,7 @@ const MetodoPagoCliente = sequelize.define('MetodoPagoCliente', {
         type: DataTypes.DATE,
     },
 }, {
-    tableName: 'Metodos_Pago_Cliente',
+    tableName: 'metodos_pago_cliente',
     timestamps: true,
     createdAt: 'fecha_creacion',
     updatedAt: 'fecha_actualizacion',
