@@ -106,10 +106,10 @@ const router = Router();
  *         description: Almacén eliminado
  */
 
-router.post('/almacenes', verifyToken, isAdmin, almacenesController.create);
-router.get('/almacenes', verifyToken, almacenesController.getAll);
-router.get('/almacenes/:id', verifyToken, almacenesController.getById);
-router.put('/almacenes/:id', verifyToken, isAdmin, almacenesController.update);
-router.delete('/almacenes/:id', verifyToken, isAdmin, almacenesController.delete);
+router.post('/', verifyToken, isAdmin, almacenesController.create);
+router.get('/', verifyToken, almacenesController.getAll);
+router.get('/:id', verifyToken, almacenesController.getById);
+router.put('/:id', verifyToken, isAdmin, almacenesController.update);
+router.delete('/:id', verifyToken, isAdmin, almacenesController.delete);
 
 export default router;

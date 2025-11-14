@@ -1,115 +1,37 @@
 import { Router } from 'express';
 import proveedoresController from '../controllers/proveedores.controller.js';
-import { verifyToken, isAdmin } from '../middlewares/auth.middleware.js';
+import { verifyToken } from '../middlewares/auth.middleware.js';
+
+ // opcional, si usas auth
 
 const router = Router();
 
 /**
  * @swagger
- * /api/proveedores:
- *   post:
- *     summary: Crear un nuevo proveedor
- *     tags: [Proveedores]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [nombre, contacto]
- *             properties:
- *               nombre:
- *                 type: string
- *               contacto:
- *                 type: string
- *               email:
- *                 type: string
- *               telefono:
- *                 type: string
- *               direccion:
- *                 type: string
- *               ciudad:
- *                 type: string
- *               pais:
- *                 type: string
- *     responses:
- *       201:
- *         description: Proveedor creado exitosamente
- *   get:
- *     summary: Obtener todos los proveedores
- *     tags: [Proveedores]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Proveedores obtenidos exitosamente
- *
- * /api/proveedores/{id}:
- *   get:
- *     summary: Obtener proveedor por ID
- *     tags: [Proveedores]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Proveedor obtenido
- *   put:
- *     summary: Actualizar proveedor
- *     tags: [Proveedores]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               nombre:
- *                 type: string
- *               contacto:
- *                 type: string
- *               email:
- *                 type: string
- *               telefono:
- *                 type: string
- *     responses:
- *       200:
- *         description: Proveedor actualizado
- *   delete:
- *     summary: Eliminar proveedor
- *     tags: [Proveedores]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Proveedor eliminado
+ * tags:
+ *   name: Proveedores
+ *   description: Gestión de proveedores del sistema
  */
 
-router.post('/proveedores', verifyToken, isAdmin, proveedoresController.create);
-router.get('/proveedores', verifyToken, proveedoresController.getAll);
-router.get('/proveedores/:id', verifyToken, proveedoresController.getById);
-router.put('/proveedores/:id', verifyToken, isAdmin, proveedoresController.update);
-router.delete('/proveedores/:id', verifyToken, isAdmin, proveedoresController.delete);
+// Crear un proveedor
+router.post('/', verifyToken, proveedoresController.create);
+
+// Obtener todos los proveedores (puedes usar filtros como ?activo=true&search=texto)
+router.get('/', verifyToken, proveedoresController.getAll);
+
+// Obtener un proveedor por ID
+router.get('/:id', verifyToken, proveedoresController.getById);
+
+// Actualizar proveedor
+router.put('/:id', verifyToken, proveedoresController.update);
+
+// Activar/desactivar proveedor
+router.patch('/:id/toggle', verifyToken, proveedoresController.toggleActive);
+
+// Eliminar proveedor (soft delete por defecto, o ?hard=true para eliminar completamente)
+router.delete('/:id', verifyToken, proveedoresController.delete);
+
+// Estadísticas
+router.get('/stats/info', verifyToken, proveedoresController.getStats);
 
 export default router;

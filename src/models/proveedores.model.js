@@ -41,7 +41,7 @@ const Proveedores = sequelize.define('Proveedores', {
     },
     // 2. Eliminar la definición manual de 'fecha_creacion' de aquí
 }, {
-    tableName: 'Proveedores',
+    tableName: 'proveedores',
     // 3. Habilitar timestamps y configurarlos para que solo gestionen 'createdAt'
     timestamps: true,
     createdAt: 'fecha_creacion',

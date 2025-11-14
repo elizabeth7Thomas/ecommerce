@@ -13,6 +13,8 @@ import cotizacionesRoutes from './cotizaciones.routes.js';
 import cotizacionesItemsRoutes from './cotizacionesItems.routes.js';
 import cotizacionesOrdenesRoutes from './cotizacionesOrdenes.routes.js';
 import devolucionesRoutes from './devoluciones.routes.js';
+import proveedoresRoutes from './proveedores.routes.js';
+import almacenesRoutes from './almacenes.routes.js';
 
 const router = Router();
 
@@ -66,6 +68,7 @@ const router = Router();
 
 // Montar todas las rutas
 router.use('/auth', authRoutes);
+router.use('/almacenes', almacenesRoutes);
 router.use('/roles', rolRoutes);
 router.use('/usuarios', usuarioRoutes);
 router.use('/productos', productRoutes);
@@ -79,5 +82,6 @@ router.use('/cotizaciones', cotizacionesRoutes);
 router.use('/cotizaciones-items', cotizacionesItemsRoutes);
 router.use('/cotizaciones-ordenes', cotizacionesOrdenesRoutes);
 router.use('/devoluciones', devolucionesRoutes);
+router.use('/proveedores', proveedoresRoutes);
 
 export default router;
