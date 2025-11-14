@@ -27,20 +27,26 @@ const Orden = sequelize.define('Orden', {
     total_orden: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
-        validate: { min: 0 },
+        validate: { 
+            min: 0,
+            isDecimal: true
+        },
     },
     estado_orden: {
-        type: DataTypes.STRING(50),
+        type: DataTypes.ENUM(
+            'pendiente', 
+            'procesando', 
+            'enviado', 
+            'entregado', 
+            'cancelado'
+        ),
         allowNull: false,
-        defaultValue: 'pendiente',
-    },
-    fecha_estado_cambio: {
-        type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
     },
     dias_estimados_entrega: {
         type: DataTypes.INTEGER,
         allowNull: true,
+        validate: { min: 1 }
     },
     notas_orden: {
         type: DataTypes.TEXT,

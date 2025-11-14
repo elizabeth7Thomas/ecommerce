@@ -11,33 +11,6 @@ import Usuario from '../models/usuario.model.js'; // Asumiendo que tienes un mod
 import sequelize from '../config/database.js';
 import { Op } from 'sequelize'; // Importar Op para operadores de Sequelize
 
-// ===============================================
-// Definición de Asociaciones (asegúrate de que estas también estén en tus modelos o en un archivo de asociaciones global)
-// Esto es crucial para que los 'include' funcionen correctamente en las consultas.
-// Si ya las tienes definidas globalmente, puedes removerlas de aquí.
-// ===============================================
-Devoluciones.hasMany(Devoluciones_Items, { foreignKey: 'id_devolucion', as: 'items' });
-Devoluciones_Items.belongsTo(Devoluciones, { foreignKey: 'id_devolucion', as: 'devolucion' });
-
-Devoluciones.belongsTo(Orden, { foreignKey: 'id_orden', as: 'orden' });
-Orden.hasMany(Devoluciones, { foreignKey: 'id_orden', as: 'devoluciones' });
-
-Devoluciones.belongsTo(Cliente, { foreignKey: 'id_cliente', as: 'cliente' });
-Cliente.hasMany(Devoluciones, { foreignKey: 'id_cliente', as: 'devoluciones' });
-
-Devoluciones.belongsTo(Usuario, { foreignKey: 'id_usuario_aprobo', as: 'usuarioAprobador' });
-Usuario.hasMany(Devoluciones, { foreignKey: 'id_usuario_aprobo', as: 'devolucionesAprobadas' });
-
-Devoluciones.hasMany(Reembolsos, { foreignKey: 'id_devolucion', as: 'reembolsos' });
-Reembolsos.belongsTo(Devoluciones, { foreignKey: 'id_devolucion', as: 'devolucion' });
-
-Devoluciones_Items.belongsTo(Producto, { foreignKey: 'id_producto', as: 'producto' });
-Producto.hasMany(Devoluciones_Items, { foreignKey: 'id_producto', as: 'devolucionesItems' });
-
-Devoluciones_Items.belongsTo(OrdenesItems, { foreignKey: 'id_orden_item', as: 'ordenItem' });
-OrdenesItems.hasMany(Devoluciones_Items, { foreignKey: 'id_orden_item', as: 'devolucionesItems' });
-
-
 /**
  * @function generarNumeroDevolucion
  * @description Genera un número de devolución único basado en la fecha y un contador diario.

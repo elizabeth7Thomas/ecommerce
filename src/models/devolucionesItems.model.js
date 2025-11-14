@@ -68,8 +68,10 @@ const Devoluciones_Items = sequelize.define('Devoluciones_Items', {
         type: DataTypes.TEXT
     }
 }, {
-    tableName: 'Devoluciones_Items',
+    tableName: 'devoluciones_items',
     timestamps: false
 });
+
+
 
 export default Devoluciones_Items;

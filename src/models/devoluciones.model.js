@@ -101,8 +101,10 @@ const Devoluciones = sequelize.define('Devoluciones', {
         }
     }
 }, {
-    tableName: 'Devoluciones',
+    tableName: 'devoluciones',
     timestamps: false
 });
+
+
 
 export default Devoluciones;

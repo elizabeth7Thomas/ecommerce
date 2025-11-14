@@ -62,8 +62,10 @@ const Reembolsos = sequelize.define('Reembolsos', {
         type: DataTypes.TEXT
     }
 }, {
-    tableName: 'Reembolsos',
+    tableName: 'reembolsos',
     timestamps: false
 });
+
+
 
 export default Reembolsos;

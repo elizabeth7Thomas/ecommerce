@@ -66,16 +66,17 @@ router.get('/', verifyToken, ordenController.getMyOrders);
  */
 router.get('/:id', verifyToken, validateOrderId, ordenController.getOrderById);
 
+
 /**
  * @swagger
- * /api/ordenes/{id}:
+ * /api/ordenes/{id_orden}:
  *   delete:
- *     summary: Elimina una orden
+ *     summary: Cancela una orden (solo si está pendiente y es del usuario)
  *     tags: [Órdenes]
  *     security:
  *       - bearerAuth: []
  */
-router.delete('/:id', verifyToken, validateOrderId, ordenController.deleteOrder);
+router.delete('/:id_orden', verifyToken, validateOrderId, ordenController.cancelMyOrder);
 
 /**
  * @swagger

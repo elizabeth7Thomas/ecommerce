@@ -11,10 +11,18 @@ const OrdenEstado = sequelize.define('OrdenEstado', {
         type: DataTypes.STRING(50),
         allowNull: false,
         unique: true,
+        validate: {
+            notEmpty: true,
+            len: [2, 50]
+        }
     },
     nombre_estado: {
         type: DataTypes.STRING(100),
         allowNull: false,
+        validate: {
+            notEmpty: true,
+            len: [2, 100]
+        }
     },
     descripcion: {
         type: DataTypes.TEXT,
@@ -22,6 +30,9 @@ const OrdenEstado = sequelize.define('OrdenEstado', {
     color_hex: {
         type: DataTypes.STRING(7),
         defaultValue: '#000000',
+        validate: {
+            is: /^#[0-9A-F]{6}$/i // Validar formato hex color
+        }
     },
     icono: {
         type: DataTypes.STRING(50),
@@ -29,6 +40,9 @@ const OrdenEstado = sequelize.define('OrdenEstado', {
     orden_secuencia: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
+        validate: {
+            min: 0
+        }
     },
     es_estado_final: {
         type: DataTypes.BOOLEAN,
@@ -55,6 +69,15 @@ const OrdenEstado = sequelize.define('OrdenEstado', {
     timestamps: true,
     createdAt: 'fecha_creacion',
     updatedAt: 'fecha_actualizacion',
+    // 🔥 NUEVO: Agregar índices para mejor performance
+    indexes: [
+        {
+            fields: ['activo', 'orden_secuencia']
+        },
+        {
+            fields: ['codigo_estado']
+        }
+    ]
 });
 
 export default OrdenEstado;
