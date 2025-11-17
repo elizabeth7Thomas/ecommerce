@@ -1,0 +1,823 @@
+{
+  "info": {
+    "_postman_id": "8a3c1b7d-4e5f-9c2a-1b8d-7e4f3a2c1b8d",
+    "name": "Métodos de Pago - Ecommerce API",
+    "description": "Colección completa para probar todos los endpoints de métodos de pago del sistema ecommerce",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12345"
+  },
+  "item": [
+    {
+      "name": "MÉTODOS DE PAGO SISTEMA",
+      "description": "Endpoints para gestionar los tipos de métodos de pago del sistema (Admin only)",
+      "item": [
+        {
+          "name": "1. GET - Obtener todos los métodos de pago",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago"]
+            },
+            "description": "Obtiene la lista de todos los métodos de pago disponibles en el sistema"
+          },
+          "response": []
+        },
+        {
+          "name": "2. GET - Obtener métodos activos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago/activos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago", "activos"]
+            },
+            "description": "Obtiene solo los métodos de pago que están activos"
+          },
+          "response": []
+        },
+        {
+          "name": "3. GET - Obtener métodos online",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago/online",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago", "online"]
+            },
+            "description": "Obtiene métodos de pago disponibles para compras online"
+          },
+          "response": []
+        },
+        {
+          "name": "4. GET - Obtener métodos tienda",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago/tienda",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago", "tienda"]
+            },
+            "description": "Obtiene métodos de pago disponibles para la tienda física"
+          },
+          "response": []
+        },
+        {
+          "name": "5. GET - Obtener métodos por tipo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago/tipo/tarjeta_credito",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago", "tipo", "tarjeta_credito"]
+            },
+            "description": "Obtiene métodos de pago filtrados por tipo. Tipos disponibles: tarjeta_credito, tarjeta_debito, transferencia_bancaria, billetera_digital, efectivo, cheque, criptomoneda"
+          },
+          "response": []
+        },
+        {
+          "name": "6. POST - Crear método de pago (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_metodo\": \"American Express\",\n  \"tipo_metodo\": \"tarjeta_credito\",\n  \"descripcion\": \"Tarjeta de crédito American Express\",\n  \"icono_url\": \"/icons/amex.png\",\n  \"requiere_verificacion\": false,\n  \"comision_porcentaje\": \"3.50\",\n  \"comision_fija\": \"0.00\",\n  \"activo\": true,\n  \"disponible_online\": true,\n  \"disponible_tienda\": true,\n  \"orden_visualizacion\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago"]
+            },
+            "description": "Crea un nuevo tipo de método de pago en el sistema (solo admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "7. PUT - Actualizar método de pago (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_metodo\": \"Visa actualizada\",\n  \"descripcion\": \"Tarjeta de crédito Visa - actualizada\",\n  \"comision_porcentaje\": \"2.99\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago", "1"]
+            },
+            "description": "Actualiza un tipo de método de pago existente (solo admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "8. DELETE - Eliminar método de pago (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago", "1"]
+            },
+            "description": "Elimina un tipo de método de pago (soft delete, solo admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "9. PATCH - Activar/Desactivar método (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago/1/activar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago", "1", "activar"]
+            },
+            "description": "Activa o desactiva un método de pago"
+          },
+          "response": []
+        },
+        {
+          "name": "10. PATCH - Actualizar configuración (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"configuracion\": {\n    \"clave_api\": \"sk_live_1234567890\",\n    \"cuenta_comerciante\": \"merchant_123\",\n    \"timeout_segundos\": 30\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago/1/configuracion",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago", "1", "configuracion"]
+            },
+            "description": "Actualiza la configuración específica de un método de pago"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "MÉTODOS DE PAGO CLIENTE",
+      "description": "Endpoints para que los clientes administren sus métodos de pago",
+      "item": [
+        {
+          "name": "1. POST - Crear método de pago (Cliente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_metodo_pago\": 1,\n  \"alias\": \"Mi Visa Principal\",\n  \"numero_tarjeta_ultimos_4\": \"4567\",\n  \"nombre_titular\": \"Juan Pérez García\",\n  \"fecha_expiracion\": \"2025-12-31\",\n  \"tipo_tarjeta\": \"visa\",\n  \"banco\": \"Banco Nacional\",\n  \"es_predeterminado\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente"]
+            },
+            "description": "Crea un nuevo método de pago para el cliente autenticado"
+          },
+          "response": []
+        },
+        {
+          "name": "2. GET - Obtener mis métodos de pago",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente"]
+            },
+            "description": "Obtiene todos los métodos de pago del cliente autenticado"
+          },
+          "response": []
+        },
+        {
+          "name": "3. GET - Obtener métodos con filtros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente?activo=true&verificado=true&es_predeterminado=false",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente"],
+              "query": [
+                {
+                  "key": "activo",
+                  "value": "true"
+                },
+                {
+                  "key": "verificado",
+                  "value": "true"
+                },
+                {
+                  "key": "es_predeterminado",
+                  "value": "false"
+                }
+              ]
+            },
+            "description": "Obtiene métodos de pago con filtros opcionales: activo, verificado, es_predeterminado"
+          },
+          "response": []
+        },
+        {
+          "name": "4. GET - Obtener método predeterminado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente/predeterminado",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente", "predeterminado"]
+            },
+            "description": "Obtiene el método de pago predeterminado del cliente"
+          },
+          "response": []
+        },
+        {
+          "name": "5. GET - Obtener método específico",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente", "1"]
+            },
+            "description": "Obtiene los detalles de un método de pago específico"
+          },
+          "response": []
+        },
+        {
+          "name": "6. PUT - Actualizar método de pago",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alias\": \"Mi Visa Actualizada\",\n  \"banco\": \"Banco Santander\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente", "1"]
+            },
+            "description": "Actualiza un método de pago existente del cliente"
+          },
+          "response": []
+        },
+        {
+          "name": "7. DELETE - Eliminar método de pago",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente", "1"]
+            },
+            "description": "Elimina un método de pago del cliente"
+          },
+          "response": []
+        },
+        {
+          "name": "8. PATCH - Establecer como predeterminado",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente/1/predeterminado",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente", "1", "predeterminado"]
+            },
+            "description": "Establece un método de pago como predeterminado"
+          },
+          "response": []
+        },
+        {
+          "name": "9. PATCH - Verificar método de pago",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo_verificacion\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente/1/verificar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente", "1", "verificar"]
+            },
+            "description": "Verifica un método de pago (requiere código de verificación)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "ADMIN - MÉTODOS DE PAGO CLIENTE",
+      "description": "Endpoints administrativos para gestionar métodos de pago de los clientes",
+      "item": [
+        {
+          "name": "1. GET - Obtener métodos de cualquier cliente (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente/admin/2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente", "admin", "2"]
+            },
+            "description": "Obtiene los métodos de pago de cualquier cliente (solo admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "2. PATCH - Verificar método para cliente (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente/admin/1/verificar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente", "admin", "1", "verificar"]
+            },
+            "description": "Verifica un método de pago de un cliente específico (solo admin)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "TEST SCENARIOS",
+      "description": "Escenarios de prueba comunes",
+      "item": [
+        {
+          "name": "Escenario 1 - Crear Tarjeta de Crédito",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_metodo_pago\": 1,\n  \"alias\": \"Mi Visa Principal\",\n  \"numero_tarjeta_ultimos_4\": \"4567\",\n  \"nombre_titular\": \"Juan Pérez García\",\n  \"fecha_expiracion\": \"2025-12-31\",\n  \"tipo_tarjeta\": \"visa\",\n  \"banco\": \"Banco Nacional\",\n  \"es_predeterminado\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente"]
+            },
+            "description": "Crear una tarjeta de crédito nueva como método predeterminado"
+          },
+          "response": []
+        },
+        {
+          "name": "Escenario 2 - Crear PayPal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_metodo_pago\": 2,\n  \"alias\": \"Mi PayPal\",\n  \"email_billetera\": \"juan.perez@gmail.com\",\n  \"es_predeterminado\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente"]
+            },
+            "description": "Crear una billetera digital (PayPal)"
+          },
+          "response": []
+        },
+        {
+          "name": "Escenario 3 - Crear Transferencia Bancaria",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_metodo_pago\": 3,\n  \"alias\": \"Mi Transferencia Banco Nacional\",\n  \"identificador_externo\": \"TRX20251117123456\",\n  \"banco\": \"Banco Nacional\",\n  \"numero_cuenta\": \"1234567890\",\n  \"nombre_titular\": \"Juan Pérez García\",\n  \"es_predeterminado\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente"]
+            },
+            "description": "Crear un método de transferencia bancaria"
+          },
+          "response": []
+        },
+        {
+          "name": "Escenario 4 - Crear Bitcoin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_metodo_pago\": 4,\n  \"alias\": \"Mi Bitcoin\",\n  \"identificador_externo\": \"1A1z7agoat4x4kKHZ7nv5pwQfxqRzN3jXx\",\n  \"es_predeterminado\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente"]
+            },
+            "description": "Crear un método de criptomoneda (Bitcoin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Escenario 5 - Crear Efectivo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_metodo_pago\": 5,\n  \"alias\": \"Pago al Recibir\",\n  \"identificador_externo\": \"contra_entrega\",\n  \"es_predeterminado\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente"]
+            },
+            "description": "Crear un método de pago en efectivo contra entrega"
+          },
+          "response": []
+        },
+        {
+          "name": "Escenario 6 - Cambiar método predeterminado",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente/2/predeterminado",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente", "2", "predeterminado"]
+            },
+            "description": "Cambiar el método de pago predeterminado del cliente"
+          },
+          "response": []
+        },
+        {
+          "name": "Escenario 7 - Listar todos los métodos del cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{client_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metodos-pago-cliente",
+              "host": ["{{base_url}}"],
+              "path": ["api", "metodos-pago-cliente"]
+            },
+            "description": "Obtener la lista completa de métodos de pago del cliente"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "client_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
