@@ -2,12 +2,12 @@ import { DataTypes, Sequelize } from 'sequelize';
 import sequelize from '../config/database.js';
 
 // Se importan los modelos necesarios para definir las asociaciones.
-import Cliente from './cliente.service.js'; 
-import Direccion from './direccion.service.js';
-import OrdenItem from './ordenesItems.service.js';
-import Producto from './producto.service.js';
-import CarritoCompras from './carrito.service.js';
-import CarritoProducto from './carritoProducto.service.js';
+import Cliente from '../models/cliente.model.js'; 
+import Direccion from '../models/direccion.model.js';
+import OrdenItem from '../models/ordenesItems.model.js';
+import Producto from '../models/producto.model.js';
+import CarritoCompras from '../models/carritoCompras.model.js';
+import CarritoProducto from '../models/carritoProducto.model.js';
 
 const Orden = sequelize.define('Orden', {
     id_orden: {
@@ -31,16 +31,6 @@ const Orden = sequelize.define('Orden', {
             key: 'id_direccion'
         }
     },
-    // Este campo es redundante si ya tienes 'estado_orden' ENUM. Considera eliminarlo.
-    id_estado_orden: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-    },
-    numero_orden: {
-        type: DataTypes.STRING(50),
-        unique: true,
-        allowNull: true,
-    },
     total_orden: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
@@ -60,15 +50,6 @@ const Orden = sequelize.define('Orden', {
         allowNull: false,
         defaultValue: 'pendiente',
     },
-    fecha_estado_cambio: {
-        type: DataTypes.DATE,
-        defaultValue: Sequelize.NOW,
-    },
-    dias_estimados_entrega: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        validate: { min: 1 }
-    },
     notas_orden: {
         type: DataTypes.TEXT,
     },
@@ -79,6 +60,10 @@ const Orden = sequelize.define('Orden', {
     updatedAt: 'fecha_actualizacion',
 });
 
+// Definir las asociaciones
+Orden.belongsTo(Cliente, { foreignKey: 'id_cliente', as: 'cliente' });
+Orden.belongsTo(Direccion, { foreignKey: 'id_direccion_envio', as: 'direccionEnvio' });
+Orden.hasMany(OrdenItem, { foreignKey: 'id_orden', as: 'items' });
 
 
 /**
@@ -89,28 +74,6 @@ const Orden = sequelize.define('Orden', {
  */
 class OrdenService {
     
-    /**
-     * Genera un número de orden único basado en la fecha y un contador.
-     * @returns {string} El número de orden generado.
-     */
-    async generarNumeroOrden() {
-        const timestamp = new Date();
-        const year = timestamp.getFullYear();
-        const month = String(timestamp.getMonth() + 1).padStart(2, '0');
-        
-        // Contar las órdenes del mes actual para un secuencial más preciso.
-        const count = await Orden.count({
-            where: {
-                fecha_orden: {
-                    [Sequelize.Op.gte]: new Date(year, month - 1, 1),
-                    [Sequelize.Op.lt]: new Date(year, month, 1)
-                }
-            }
-        });
-        
-        return `ORD-${year}${month}-${String(count + 1).padStart(5, '0')}`;
-    }
-
     /**
      * Crea una nueva orden a partir del carrito de compras activo de un cliente.
      * @param {number} idCliente - ID del cliente.
@@ -166,15 +129,12 @@ class OrdenService {
             }, 0);
 
             // 5. Crear orden
-            const numero_orden = await this.generarNumeroOrden();
             const nuevaOrden = await Orden.create({
                 id_cliente: idCliente,
                 id_direccion_envio: idDireccionEnvio,
                 total_orden,
                 estado_orden: 'pendiente',
-                numero_orden,
                 notas_orden,
-                fecha_estado_cambio: new Date()
             }, { transaction: t });
 
             // 6. Crear items de orden (EL TRIGGER SE ENCARGA DEL STOCK)
@@ -198,13 +158,19 @@ class OrdenService {
                 { where: { id_carrito: carrito.id_carrito }, transaction: t }
             );
 
+            // Guardar el ID antes de commit para posterior consulta
+            const idOrdenCreada = nuevaOrden.id_orden;
+            
             await t.commit();
             
-            // Recargar la orden con relaciones para devolverla completa.
-            return await this.getOrderDetailsById(nuevaOrden.id_orden);
+            // Recargar la orden con relaciones para devolverla completa (FUERA de la transacción)
+            return await this.getOrderDetailsById(idOrdenCreada);
             
         } catch (error) {
-            await t.rollback();
+            // Solo hacer rollback si la transacción aún está activa
+            if (t && !t.finished) {
+                await t.rollback();
+            }
             console.error("Error al crear la orden:", error);
             throw error; // Re-lanzar el error para que sea manejado en una capa superior.
         }
@@ -218,12 +184,12 @@ class OrdenService {
     async getOrderDetailsById(id_orden) {
         return await Orden.findByPk(id_orden, {
             include: [
-                { model: Cliente, as: 'cliente', attributes: ['id_cliente', 'nombre', 'email'] },
+                { model: Cliente, as: 'cliente', attributes: ['id_cliente', 'nombre', 'apellido'] },
                 { model: Direccion, as: 'direccionEnvio' },
                 { 
                     model: OrdenItem, 
                     as: 'items',
-                    include: [{ model: Producto, as: 'producto', attributes: ['nombre_producto', 'sku'] }]
+                    include: [{ model: Producto, as: 'producto', attributes: ['nombre_producto'] }]
                 }
             ]
         });
@@ -261,7 +227,6 @@ class OrdenService {
         }
 
         orden.estado_orden = nuevoEstado;
-        orden.fecha_estado_cambio = new Date();
         await orden.save();
         
         return orden;
